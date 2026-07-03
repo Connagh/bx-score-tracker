@@ -873,22 +873,22 @@ function physics(){
   if (energy < 0.35) simHeat = Math.min(simHeat, 2);
 }
 
-function drawLightning(x1, y1, x2, y2, t){
+function drawLightning(x1, y1, x2, y2, t, c1 = '#3dffa0', c2 = '#3ecbff', amp = 1){
   const segs = 9, pts = [[x1, y1]];
   const dx = x2 - x1, dy = y2 - y1;
   const len = Math.sqrt(dx*dx + dy*dy) || 1;
   const nx = -dy/len, ny = dx/len;
   for (let i = 1; i < segs; i++){
     const f = i / segs;
-    const wob = Math.sin(t*0.02 + i*2.7) * Math.min(len*0.05, 11) * (Math.random()*.55 + .45);
+    const wob = Math.sin(t*0.02 + i*2.7) * Math.min(len*0.05, 11) * amp * (Math.random()*.55 + .45);
     pts.push([x1 + dx*f + nx*wob, y1 + dy*f + ny*wob]);
   }
   pts.push([x2, y2]);
   const g = ctx.createLinearGradient(x1, y1, x2, y2);
-  g.addColorStop(0, '#3dffa0'); g.addColorStop(1, '#3ecbff');
+  g.addColorStop(0, c1); g.addColorStop(0.5, mixHex(c1, c2, 0.5)); g.addColorStop(1, c2);
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.shadowColor = '#3ecbff'; ctx.shadowBlur = 16;
+  ctx.shadowColor = c2; ctx.shadowBlur = 16;
   ctx.strokeStyle = g;
   for (const [wdt, al] of [[4.5, .28], [1.8, .95]]){
     ctx.lineWidth = wdt; ctx.globalAlpha = al;
@@ -897,6 +897,22 @@ function drawLightning(x1, y1, x2, y2, t){
     ctx.stroke();
   }
   ctx.restore();
+}
+// blend two hex colours (#rrggbb) -> css rgb string
+function mixHex(a, b, t){
+  const pa = a.replace('#',''), pb = b.replace('#','');
+  const ai = parseInt(pa.length===3 ? pa.replace(/(.)/g,'$1$1') : pa, 16);
+  const bi = parseInt(pb.length===3 ? pb.replace(/(.)/g,'$1$1') : pb, 16);
+  const ar=(ai>>16)&255, ag=(ai>>8)&255, ab=ai&255;
+  const br=(bi>>16)&255, bg=(bi>>8)&255, bb=bi&255;
+  const r=Math.round(ar+(br-ar)*t), gg=Math.round(ag+(bg-ag)*t), bl=Math.round(ab+(bb-ab)*t);
+  return `rgb(${r},${gg},${bl})`;
+}
+// clash: two colours fusing/colliding at the join
+let clash = null;
+function startClash(a, b){
+  clash = { ax:a.x, ay:a.y, bx:b.x, by:b.y, c1:a.p.color, c2:b.p.color, t:0, dur:24 };
+  wake(70);
 }
 function burst(wx, wy, color){
   for (let i = 0; i < 26; i++){
@@ -961,7 +977,7 @@ function render(){
     const a = nodes.get(drag.id), b = nodes.get(drag.target);
     if (a && b){
       const [x1, y1] = toScreen(a.x, a.y), [x2, y2] = toScreen(b.x, b.y);
-      drawLightning(x1, y1, x2, y2, T);
+      drawLightning(x1, y1, x2, y2, T, a.p.color, b.p.color);
     }
   }
   // rim-drag battle line (follows cursor until it lands on a blader)
@@ -969,19 +985,47 @@ function render(){
     const a = nodes.get(drag.id);
     if (a){
       const [x1, y1] = toScreen(a.x, a.y);
-      let x2, y2;
+      let x2, y2, endCol = a.p.color;
       if (drag.target){
         const b = nodes.get(drag.target);
         [x2, y2] = toScreen(b.x, b.y);
+        endCol = b.p.color;
       } else { x2 = drag.lx; y2 = drag.ly; }
-      drawLightning(x1, y1, x2, y2, T);
+      drawLightning(x1, y1, x2, y2, T, a.p.color, endCol);
       if (!drag.target){
         ctx.save();
-        ctx.fillStyle = '#3ecbff'; ctx.shadowColor = '#3ecbff'; ctx.shadowBlur = 12;
+        ctx.fillStyle = a.p.color; ctx.shadowColor = a.p.color; ctx.shadowBlur = 12;
         ctx.beginPath(); ctx.arc(x2, y2, 5 * cam.z, 0, 7); ctx.fill();
         ctx.restore();
       }
     }
+  }
+  // clash animation: two blader colours fusing / colliding at the join
+  if (clash){
+    clash.t++;
+    const p = clash.t / clash.dur;              // 0..1
+    const ease = Math.sin(Math.min(p, 1) * Math.PI); // swell then settle
+    const [x1, y1] = toScreen(clash.ax, clash.ay);
+    const [x2, y2] = toScreen(clash.bx, clash.by);
+    const amp = 1 + ease * 2.2;
+    for (let k = 0; k < 3; k++) drawLightning(x1, y1, x2, y2, T*1.7 + k*13, clash.c1, clash.c2, amp);
+    // fusion sparks streaming out of the collision point
+    const mx = (clash.ax + clash.bx)/2, my = (clash.ay + clash.by)/2;
+    const spark = Math.ceil(3 + ease * 5);
+    for (let i = 0; i < spark; i++){
+      const ang = Math.random()*Math.PI*2, sp = (1.5 + Math.random()*4) * (0.6 + ease);
+      particles.push({ x:mx, y:my, vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp, life:1, c: Math.random()<.5 ? clash.c1 : clash.c2 });
+    }
+    // bright flash core at the join
+    const [cmx, cmy] = toScreen(mx, my);
+    ctx.save();
+    ctx.globalAlpha = ease;
+    ctx.fillStyle = mixHex(clash.c1, clash.c2, 0.5);
+    ctx.shadowColor = clash.c1; ctx.shadowBlur = 24 * ease;
+    ctx.beginPath(); ctx.arc(cmx, cmy, (6 + ease*10) * cam.z, 0, 7); ctx.fill();
+    ctx.restore();
+    if (clash.t >= clash.dur){ burst(mx, my, clash.c1); burst(mx, my, clash.c2); clash = null; }
+    wake(10);
   }
   // nodes
   for (const n of nodes.values()){
@@ -1146,6 +1190,16 @@ cv.addEventListener('pointermove', ev => {
     wake(5);
   }
 });
+// play the colour-clash, then open the battle card
+function triggerBattle(aId, bId){
+  const a = nodes.get(aId), b = nodes.get(bId);
+  if (a && b){
+    startClash(a, b);
+    setTimeout(() => openBattle(aId, bId), 360);
+  } else {
+    openBattle(aId, bId);
+  }
+}
 function endPointer(ev){
   pointers.delete(ev.pointerId);
   cv.classList.remove('dragging');
@@ -1153,7 +1207,7 @@ function endPointer(ev){
   if (drag.mode === 'link'){
     if (drag.target){
       haptic([18, 40, 18]);
-      openBattle(drag.id, drag.target);
+      triggerBattle(drag.id, drag.target);
     } else if (!drag.moved){
       // a tap on the rim still opens the blader card
       openPlayerCard(drag.id);
@@ -1166,9 +1220,8 @@ function endPointer(ev){
     const n = nodes.get(drag.id);
     if (n) n.pin = false;
     if (drag.target && drag.moved){
-      const a = drag.id, b = drag.target;
       haptic([18, 40, 18]);
-      openBattle(a, b);
+      triggerBattle(drag.id, drag.target);
     } else if (!drag.moved && n){
       openPlayerCard(n.p.id);
     }
