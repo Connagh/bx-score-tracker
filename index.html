@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0e1013">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="BX Arena — Beyblade X score tracker. Players as graph nodes, drag to battle, Battle Pass launch speeds.">
+<title>BX Arena</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#0e1013; --bg1:#15181c; --bg2:#1c2128; --bg3:#242a33;
+  --line:#262c35; --line2:#333b47;
+  --txt:#e9eef4; --dim:#8b95a2; --faint:#5c6673;
+  --green:#3dffa0; --blue:#3ecbff;
+  --green-dim:rgba(61,255,160,.14); --blue-dim:rgba(62,203,255,.14);
+  --red:#ff6b7a; --gold:#ffd166;
+  --grad:linear-gradient(135deg,var(--green),var(--blue));
+  --r:16px; --r-sm:11px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --disp:'Rajdhani',system-ui,sans-serif;
+  --body:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  background:var(--bg0);color:var(--txt);font-family:var(--body);
+  font-size:15px;line-height:1.45;user-select:none;-webkit-user-select:none;
+  position:fixed;inset:0;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select{font:inherit;color:var(--txt)}
+::placeholder{color:var(--faint)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+
+/* ---------- top bar ---------- */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:40;
+  display:flex;align-items:center;gap:10px;
+  padding:calc(var(--sat) + 10px) 16px 10px;
+  pointer-events:none;
+}
+#topbar>*{pointer-events:auto}
+.logo{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:.12em}
+.logo .x{
+  width:26px;height:26px;display:grid;place-items:center;
+  font-size:19px;font-weight:700;color:#0b0d10;border-radius:8px;
+  background:var(--grad);
+  box-shadow:0 0 14px rgba(61,255,160,.45),0 0 26px rgba(62,203,255,.28);
+}
+.logo small{font-size:11px;letter-spacing:.28em;color:var(--dim);font-weight:600;margin-top:3px}
+#topbar .spacer{flex:1}
+.iconbtn{
+  width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(28,33,40,.72);border:1px solid var(--line);backdrop-filter:blur(10px);
+  color:var(--dim);transition:.15s;
+}
+.iconbtn:hover{color:var(--txt);border-color:var(--line2)}
+.iconbtn svg{width:18px;height:18px}
+
+/* ---------- desktop tabs (top) / mobile tabs (bottom) ---------- */
+#tabbar{
+  position:fixed;z-index:40;display:flex;gap:2px;
+  background:rgba(21,24,28,.82);border:1px solid var(--line);
+  backdrop-filter:blur(14px);border-radius:16px;padding:4px;
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 18px;border-radius:12px;color:var(--dim);
+  font-family:var(--disp);font-weight:600;font-size:13px;letter-spacing:.14em;
+  transition:.18s;position:relative;
+}
+.tab svg{width:19px;height:19px}
+.tab.on{color:var(--txt);background:var(--bg3)}
+.tab.on::after{
+  content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:16px;height:2px;border-radius:2px;background:var(--grad);
+  box-shadow:0 0 8px var(--green);
+}
+.tab .dot{
+  position:absolute;top:6px;right:10px;width:7px;height:7px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 7px var(--green);display:none;
+}
+.tab .dot.show{display:block}
+@media(min-width:768px){
+  #tabbar{top:calc(var(--sat) + 9px);left:50%;transform:translateX(-50%)}
+  .tab{flex-direction:row;gap:8px;padding:9px 20px}
+}
+@media(max-width:767px){
+  #tabbar{bottom:calc(var(--sab) + 10px);left:50%;transform:translateX(-50%)}
+  .tab{padding:7px 20px 6px;font-size:10.5px}
+}
+
+/* ---------- arena canvas ---------- */
+#cv{position:fixed;inset:0;display:block;touch-action:none;cursor:grab}
+#cv.dragging{cursor:grabbing}
+#arenaHint{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:30;
+  bottom:calc(var(--sab) + 78px);
+  color:var(--faint);font-size:12.5px;letter-spacing:.04em;text-align:center;
+  pointer-events:none;transition:opacity .5s;padding:0 24px;
+}
+@media(min-width:768px){#arenaHint{bottom:34px}}
+#fabAdd{
+  position:fixed;z-index:35;width:52px;height:52px;border-radius:50%;
+  right:18px;bottom:calc(var(--sab) + 78px);
+  background:var(--grad);color:#0b0d10;font-size:26px;font-weight:600;
+  display:grid;place-items:center;
+  box-shadow:0 0 18px rgba(61,255,160,.35),0 4px 18px rgba(0,0,0,.45);
+  transition:transform .15s;
+}
+#fabAdd:active{transform:scale(.92)}
+@media(min-width:768px){#fabAdd{bottom:26px;right:26px}}
+
+/* ---------- panels (history / pass) ---------- */
+.panel{
+  position:fixed;inset:0;z-index:20;display:none;flex-direction:column;
+  background:radial-gradient(1200px 700px at 70% -10%,rgba(62,203,255,.05),transparent 60%),
+             radial-gradient(1000px 700px at 10% 110%,rgba(61,255,160,.05),transparent 60%),
+             var(--bg0);
+  overflow:hidden;
+}
+.panel.on{display:flex}
+.panel-scroll{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:calc(var(--sat) + 66px) 16px calc(var(--sab) + 86px);
+}
+@media(min-width:768px){
+  .panel-scroll{padding:calc(var(--sat) + 78px) 24px 40px;max-width:820px;margin:0 auto;width:100%}
+}
+.ph{font-family:var(--disp);font-weight:700;font-size:24px;letter-spacing:.1em;margin:6px 0 2px}
+.psub{color:var(--dim);font-size:13px;margin-bottom:18px}
+
+/* ---------- cards / shared ---------- */
+.card{
+  background:linear-gradient(180deg,var(--bg2),var(--bg1));
+  border:1px solid var(--line);border-radius:var(--r);
+  padding:16px;margin-bottom:12px;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 13px;border-radius:999px;border:1px solid var(--line);
+  background:var(--bg1);color:var(--dim);font-size:12.5px;font-weight:500;
+  transition:.15s;white-space:nowrap;
+}
+.chip.on{color:var(--txt);border-color:transparent;background:var(--bg3);box-shadow:inset 0 0 0 1px var(--line2)}
+.chiprow{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px;scrollbar-width:none}
+.chiprow::-webkit-scrollbar{display:none}
+.pdot{width:9px;height:9px;border-radius:50%;flex:none}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 20px;border-radius:13px;font-weight:600;font-size:14px;
+  background:var(--bg3);border:1px solid var(--line2);transition:.15s;
+}
+.btn:active{transform:scale(.97)}
+.btn.primary{
+  background:var(--grad);color:#0b0d10;border:none;
+  font-family:var(--disp);font-weight:700;letter-spacing:.1em;font-size:15px;
+  box-shadow:0 0 16px rgba(61,255,160,.3);
+}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.danger{color:var(--red);border-color:rgba(255,107,122,.3)}
+.btn.sm{padding:8px 14px;font-size:13px;border-radius:10px}
+.btn:disabled{opacity:.4;pointer-events:none}
+.field{
+  width:100%;background:var(--bg1);border:1px solid var(--line2);border-radius:12px;
+  padding:12px 14px;font-size:15px;outline:none;transition:border-color .15s;
+}
+.field:focus{border-color:var(--blue)}
+.empty{
+  text-align:center;color:var(--faint);padding:52px 24px;font-size:14px;line-height:1.7;
+}
+.empty .big{font-size:34px;display:block;margin-bottom:10px;filter:grayscale(.2)}
+
+/* ---------- sheets & modals ---------- */
+.scrim{
+  position:fixed;inset:0;z-index:60;background:rgba(8,10,12,.66);
+  backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;z-index:61;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,var(--bg2),var(--bg1));
+  border:1px solid var(--line2);border-bottom:none;
+  border-radius:22px 22px 0 0;
+  padding:10px 18px calc(var(--sab) + 18px);
+  transform:translateY(105%);transition:transform .28s cubic-bezier(.32,.72,.33,1);
+  max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;
+}
+.sheet.on{transform:translateY(0)}
+.sheet .grab{width:38px;height:4px;border-radius:3px;background:var(--line2);margin:2px auto 14px}
+@media(min-width:768px){
+  .sheet{
+    left:50%;right:auto;bottom:auto;top:50%;width:min(520px,92vw);
+    transform:translate(-50%,-46%) scale(.97);opacity:0;
+    border-radius:22px;border-bottom:1px solid var(--line2);
+    padding:22px 24px;transition:.22s;pointer-events:none;
+  }
+  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+  .sheet .grab{display:none}
+}
+
+/* ---------- battle sheet ---------- */
+#bSheet .vs{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin:4px 0 14px;
+}
+.bSide{text-align:center;min-width:0}
+.bSide .nm{
+  font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:.05em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bSide .sc{
+  font-family:var(--disp);font-weight:700;font-size:64px;line-height:1;margin-top:2px;
+  text-shadow:0 0 22px currentColor;
+}
+.bSide .splive{font-size:11px;color:var(--dim);height:16px;margin-top:2px;letter-spacing:.06em}
+.bSide .splive b{color:inherit}
+#bSheet .vsx{
+  font-family:var(--disp);font-weight:700;font-size:15px;color:var(--faint);letter-spacing:.2em;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+#bTarget{
+  border:1px solid var(--line2);border-radius:8px;background:var(--bg1);
+  color:var(--dim);font-size:12px;padding:3px 8px;
+}
+.finrow{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:8px}
+.finbtn{
+  border-radius:12px;padding:11px 2px 9px;border:1px solid var(--line2);
+  background:var(--bg1);display:flex;flex-direction:column;align-items:center;gap:1px;
+  transition:.12s;
+}
+.finbtn:active{transform:scale(.94)}
+.finbtn .fv{font-family:var(--disp);font-weight:700;font-size:19px;line-height:1}
+.finbtn .fl{font-size:9.5px;letter-spacing:.12em;color:var(--dim);font-weight:600}
+.finbtn.xt .fv{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sideLabel{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);
+  font-weight:600;letter-spacing:.08em;margin:12px 0 7px;
+}
+.sideLabel::after{content:'';flex:1;height:1px;background:var(--line)}
+#bLog{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px;min-height:26px}
+.pt{
+  font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;
+  border:1px solid var(--line2);color:var(--dim);letter-spacing:.05em;
+}
+#bFoot{display:flex;gap:10px;margin-top:14px}
+#bFoot .btn{flex:1}
+
+/* win overlay */
+#winOv{
+  position:fixed;inset:0;z-index:70;display:none;place-items:center;
+  background:rgba(8,10,12,.72);backdrop-filter:blur(8px);text-align:center;
+}
+#winOv.on{display:grid}
+#winOv .wname{
+  font-family:var(--disp);font-weight:700;font-size:44px;letter-spacing:.06em;
+  text-shadow:0 0 34px currentColor;
+}
+#winOv .wsub{font-family:var(--disp);letter-spacing:.34em;color:var(--dim);font-size:13px;margin-bottom:6px}
+#winOv .wscore{font-family:var(--disp);font-size:22px;color:var(--dim);margin-top:4px}
+#winOv .btn{margin-top:26px}
+
+/* ---------- player card ---------- */
+#pCard .phead{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+#pCard .pava{
+  width:52px;height:52px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-family:var(--disp);font-weight:700;font-size:20px;color:#0b0d10;
+}
+#pCard .pname{font-family:var(--disp);font-weight:700;font-size:23px;letter-spacing:.04em;flex:1;min-width:0;border:none;background:transparent;padding:0;width:100%}
+#pCard .pname:focus{outline:none;border-bottom:1px solid var(--blue)}
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{
+  background:var(--bg1);border:1px solid var(--line);border-radius:12px;
+  padding:10px 4px;text-align:center;
+}
+.stat b{font-family:var(--disp);font-size:20px;font-weight:700;display:block}
+.stat span{font-size:9.5px;color:var(--dim);letter-spacing:.1em;font-weight:600}
+.colorrow{display:flex;gap:9px;margin:4px 0 16px;flex-wrap:wrap}
+.cdot{width:26px;height:26px;border-radius:50%;border:2px solid transparent;transition:.13s}
+.cdot.on{border-color:#fff;transform:scale(1.15)}
+#pCard .rivals{margin-bottom:14px}
+.rival{
+  display:flex;align-items:center;gap:10px;padding:9px 2px;
+  border-bottom:1px solid var(--line);font-size:13.5px;
+}
+.rival:last-child{border-bottom:none}
+.rival .rec{margin-left:auto;font-family:var(--disp);font-weight:700;letter-spacing:.1em}
+
+/* ---------- history ---------- */
+.day{
+  font-family:var(--disp);font-weight:600;font-size:13px;color:var(--dim);
+  letter-spacing:.22em;margin:20px 0 9px;display:flex;align-items:center;gap:12px;
+}
+.day::after{content:'';flex:1;height:1px;background:var(--line)}
+.match{
+  background:linear-gradient(180deg,var(--bg2),var(--bg1));
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;
+  transition:border-color .15s;
+}
+.match .mrow{display:flex;align-items:center;gap:10px}
+.match .mname{font-family:var(--disp);font-weight:700;font-size:16.5px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match .mname.lose{color:var(--dim);font-weight:600}
+.match .msc{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:.14em;padding:0 4px}
+.match .mtime{margin-left:auto;color:var(--faint);font-size:11.5px;flex:none}
+.match .mdetail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.match.open .mdetail{display:block}
+.match .mpts{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.match .mfoot{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:11.5px}
+.match .del{margin-left:auto;color:var(--red);font-size:12px;opacity:.75}
+
+/* ---------- battle pass tab ---------- */
+.pass{
+  background:linear-gradient(180deg,var(--bg2),var(--bg1));
+  border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:11px;
+}
+.pass .prow{display:flex;align-items:center;gap:11px}
+.pass .picon{
+  width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:none;
+  background:var(--bg1);border:1px solid var(--line2);
+}
+.pass .picon svg{width:19px;height:19px;color:var(--blue)}
+.pass.live .picon{border-color:rgba(62,203,255,.5);box-shadow:0 0 12px rgba(62,203,255,.25)}
+.pass .pnm{font-weight:600;font-size:14.5px}
+.pass .pst{font-size:11.5px;color:var(--dim)}
+.pass .psp{
+  margin-left:auto;text-align:right;font-family:var(--disp);font-weight:700;font-size:24px;
+  line-height:1;flex:none;
+}
+.pass .psp small{display:block;font-size:9px;color:var(--dim);letter-spacing:.18em;font-weight:600;margin-top:2px}
+.pass .passign{display:flex;gap:8px;margin-top:12px;align-items:center}
+.pass select{
+  flex:1;background:var(--bg1);border:1px solid var(--line2);border-radius:10px;
+  padding:9px 12px;font-size:13.5px;outline:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b95a2' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
+.lb{margin-top:6px}
+.lbrow{
+  display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);
+}
+.lbrow:last-child{border-bottom:none}
+.lbrow .rank{font-family:var(--disp);font-weight:700;color:var(--faint);width:20px;font-size:15px}
+.lbrow .rank.r1{color:var(--gold);text-shadow:0 0 10px rgba(255,209,102,.5)}
+.lbrow .lbsp{
+  margin-left:auto;font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:.03em;
+}
+.lbrow .lbsp small{font-size:10px;color:var(--dim);letter-spacing:.14em;margin-left:3px}
+.launchrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:13px;color:var(--dim)}
+.launchrow:last-child{border-bottom:none}
+.launchrow b{font-family:var(--disp);font-size:16px;color:var(--txt);letter-spacing:.03em}
+.launchrow .lt{margin-left:auto;font-size:11px;color:var(--faint)}
+.notice{
+  border:1px solid rgba(255,209,102,.25);background:rgba(255,209,102,.06);
+  border-radius:var(--r-sm);padding:11px 14px;font-size:12.5px;color:#d8c99a;
+  margin-bottom:12px;line-height:1.55;
+}
+details.adv{margin-top:14px}
+details.adv summary{
+  cursor:pointer;color:var(--faint);font-size:12px;letter-spacing:.08em;font-weight:600;
+  list-style:none;display:flex;align-items:center;gap:6px;
+}
+details.adv summary::before{content:'▸';transition:transform .15s}
+details.adv[open] summary::before{transform:rotate(90deg)}
+#rawlog{
+  margin-top:10px;background:#0a0c0e;border:1px solid var(--line);border-radius:10px;
+  padding:10px;font:11px/1.7 ui-monospace,monospace;color:#7fd4a8;max-height:180px;
+  overflow-y:auto;user-select:text;-webkit-user-select:text;word-break:break-all;
+}
+
+/* ---------- onboarding ---------- */
+#onboard{
+  position:fixed;inset:0;z-index:80;display:none;place-items:center;
+  background:radial-gradient(900px 600px at 50% -20%,rgba(62,203,255,.08),transparent 60%),
+             radial-gradient(900px 600px at 50% 120%,rgba(61,255,160,.08),transparent 60%),
+             var(--bg0);
+  padding:24px;overflow-y:auto;
+}
+#onboard.on{display:grid}
+#onboard .obox{width:min(400px,100%)}
+#onboard h1{
+  font-family:var(--disp);font-weight:700;font-size:34px;letter-spacing:.14em;text-align:center;
+}
+#onboard h1 .xg{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+#onboard .osub{text-align:center;color:var(--dim);font-size:13.5px;margin:6px 0 26px;letter-spacing:.03em}
+.obRow{display:flex;gap:9px;margin-bottom:9px;align-items:center}
+.obRow .cdot{flex:none;width:34px;height:34px;border-width:0;box-shadow:0 0 12px -2px currentColor}
+#obAdd{width:100%;margin-top:2px;border-style:dashed;color:var(--dim)}
+#obGo{width:100%;margin-top:18px;padding:15px}
+
+/* ---------- toasts ---------- */
+#toasts{
+  position:fixed;z-index:90;left:50%;transform:translateX(-50%);
+  top:calc(var(--sat) + 64px);display:flex;flex-direction:column;gap:8px;align-items:center;
+  pointer-events:none;width:max-content;max-width:92vw;
+}
+.toast{
+  background:rgba(28,33,40,.94);border:1px solid var(--line2);backdrop-filter:blur(12px);
+  border-radius:12px;padding:10px 17px;font-size:13.5px;font-weight:500;
+  box-shadow:0 6px 22px rgba(0,0,0,.4);display:flex;align-items:center;gap:9px;
+  animation:tin .25s cubic-bezier(.2,.9,.3,1.2);max-width:92vw;
+}
+.toast.out{animation:tout .3s forwards}
+.toast .tico{color:var(--green)}
+@keyframes tin{from{opacity:0;transform:translateY(-12px) scale(.95)}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px) scale(.96)}}
+
+/* misc */
+.row{display:flex;align-items:center;gap:10px}
+.mt{margin-top:14px}.mb{margin-bottom:14px}
+.sechead{font-family:var(--disp);font-weight:600;font-size:13px;letter-spacing:.2em;color:var(--dim);margin:22px 0 10px}
+hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+<div id="arenaHint"></div>
+
+<header id="topbar">
+  <div class="logo"><span class="x">X</span>BX<small>ARENA</small></div>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="btnSettings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+  </button>
+</header>
+
+<nav id="tabbar">
+  <button class="tab on" data-tab="arena">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="9" r="2.6"/><circle cx="10" cy="18" r="2.6"/><path d="M8.3 7.2l7.2 1.4M7 8.3l2.2 7.3M16.3 10.9l-4.6 5.5"/></svg>
+    ARENA
+  </button>
+  <button class="tab" data-tab="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2.2"/></svg>
+    HISTORY
+  </button>
+  <button class="tab" data-tab="pass">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
+    PASS<span class="dot" id="passDot"></span>
+  </button>
+</nav>
+
+<button id="fabAdd" aria-label="Add player">+</button>
+
+<!-- HISTORY PANEL -->
+<section class="panel" id="panel-history">
+  <div class="panel-scroll">
+    <h2 class="ph">EVENT HISTORY</h2>
+    <p class="psub">Every clash, recorded.</p>
+    <div class="chiprow" id="histFilters"></div>
+    <div id="histList"></div>
+  </div>
+</section>
+
+<!-- BATTLE PASS PANEL -->
+<section class="panel" id="panel-pass">
+  <div class="panel-scroll">
+    <h2 class="ph">BATTLE PASS</h2>
+    <p class="psub">Launch speeds, live from your passes.</p>
+    <div id="btNotice"></div>
+    <div class="row" style="gap:9px;flex-wrap:wrap">
+      <button class="btn primary sm" id="btnConnect">⊕ CONNECT PASS</button>
+      <button class="btn ghost sm" id="btnSim">+ Simulator</button>
+    </div>
+    <div id="passList" class="mt"></div>
+    <div class="sechead">TOP SHOOT POWER</div>
+    <div class="card lb" id="lbBox"></div>
+    <div class="sechead">RECENT LAUNCHES</div>
+    <div class="card" id="launchFeed"></div>
+    <details class="adv" id="advBox">
+      <summary>PACKET INSPECTOR</summary>
+      <p style="font-size:12px;color:var(--faint);margin-top:8px;line-height:1.6">
+        Raw data from connected passes. If shoot power reads wrong, tap a highlighted value
+        in the log to lock the correct byte mapping.
+      </p>
+      <div id="rawlog">— no packets yet —</div>
+      <button class="btn ghost sm mt" id="btnResetMap">Reset byte mapping</button>
+    </details>
+  </div>
+</section>
+
+<!-- SCRIM -->
+<div class="scrim" id="scrim"></div>
+
+<!-- BATTLE SHEET -->
+<div class="sheet" id="bSheet" role="dialog" aria-label="Battle">
+  <div class="grab"></div>
+  <div class="vs">
+    <div class="bSide" id="bA"><div class="nm"></div><div class="sc">0</div><div class="splive"></div></div>
+    <div class="vsx">VS<select id="bTarget"><option value="4">to 4</option><option value="5">to 5</option><option value="7">to 7</option><option value="10">to 10</option></select></div>
+    <div class="bSide" id="bB"><div class="nm"></div><div class="sc">0</div><div class="splive"></div></div>
+  </div>
+  <div class="sideLabel" id="bALabel"></div>
+  <div class="finrow" data-side="a"></div>
+  <div class="sideLabel" id="bBLabel"></div>
+  <div class="finrow" data-side="b"></div>
+  <div id="bLog"></div>
+  <div id="bFoot">
+    <button class="btn ghost" id="bUndo">↩ Undo</button>
+    <button class="btn danger ghost" id="bCancel">Abandon</button>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="winOv">
+  <div>
+    <div class="wsub">WINNER</div>
+    <div class="wname" id="wName"></div>
+    <div class="wscore" id="wScore"></div>
+    <button class="btn primary" id="wDone">BACK TO ARENA</button>
+  </div>
+</div>
+
+<!-- PLAYER CARD -->
+<div class="sheet" id="pCard" role="dialog" aria-label="Player">
+  <div class="grab"></div>
+  <div class="phead">
+    <div class="pava" id="pAva"></div>
+    <input class="pname" id="pName" maxlength="18" aria-label="Player name">
+  </div>
+  <div class="statrow">
+    <div class="stat"><b id="stW">0</b><span>WINS</span></div>
+    <div class="stat"><b id="stL">0</b><span>LOSSES</span></div>
+    <div class="stat"><b id="stX">0</b><span>XTREMES</span></div>
+    <div class="stat"><b id="stSP">—</b><span>BEST SP</span></div>
+  </div>
+  <div class="colorrow" id="pColors"></div>
+  <div class="sechead" style="margin-top:4px">RIVALRIES</div>
+  <div class="rivals" id="pRivals"></div>
+  <div class="row">
+    <button class="btn primary" style="flex:1" id="pBattle">⚡ BATTLE</button>
+    <button class="btn danger ghost" id="pDelete">Delete</button>
+  </div>
+</div>
+
+<!-- ADD PLAYER -->
+<div class="sheet" id="addSheet" role="dialog" aria-label="Add player">
+  <div class="grab"></div>
+  <h3 class="ph" style="font-size:19px;margin-bottom:12px">NEW BLADER</h3>
+  <input class="field" id="addName" maxlength="18" placeholder="Name" autocomplete="off">
+  <div class="colorrow" style="margin-top:14px" id="addColors"></div>
+  <button class="btn primary" style="width:100%" id="addGo">ENTER THE ARENA</button>
+</div>
+
+<!-- H2H POPOVER -->
+<div class="sheet" id="h2h" role="dialog" aria-label="Head to head">
+  <div class="grab"></div>
+  <div id="h2hBody"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="sheet" id="sSheet" role="dialog" aria-label="Settings">
+  <div class="grab"></div>
+  <h3 class="ph" style="font-size:19px">SETTINGS</h3>
+  <div class="row mt" style="justify-content:space-between">
+    <span style="font-size:14px">Default match target</span>
+    <select id="setTarget" class="field" style="width:110px">
+      <option value="4">First to 4</option><option value="5">First to 5</option>
+      <option value="7">First to 7</option><option value="10">First to 10</option>
+    </select>
+  </div>
+  <hr class="soft">
+  <div class="row" style="gap:9px;flex-wrap:wrap">
+    <button class="btn ghost sm" id="btnExport">Export data</button>
+    <button class="btn ghost sm" id="btnImport">Import data</button>
+    <input type="file" id="importFile" accept=".json" hidden>
+  </div>
+  <hr class="soft">
+  <button class="btn danger ghost sm" id="btnWipe">Erase everything</button>
+  <p style="font-size:11.5px;color:var(--faint);margin-top:14px;line-height:1.6">
+    All data lives in this browser only. Export regularly if you care about the record books.
+  </p>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboard">
+  <div class="obox">
+    <h1>BX <span class="xg">ARENA</span></h1>
+    <p class="osub">Who's battling? Add your bladers.</p>
+    <div id="obRows"></div>
+    <button class="btn ghost" id="obAdd">+ Add another blader</button>
+    <button class="btn primary" id="obGo">ENTER THE ARENA</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/*==UTIL==*/
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-3);
+const clamp = (v,a,b) => Math.max(a, Math.min(b,v));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtSP = n => n==null ? '—' : Number(n).toLocaleString('en-US');
+const fmtTime = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+const fmtDay = ts => {
+  const d = new Date(ts), t = new Date(), y = new Date(Date.now() - 864e5);
+  const same = (a,b) => a.toDateString() === b.toDateString();
+  if (same(d,t)) return 'TODAY';
+  if (same(d,y)) return 'YESTERDAY';
+  return d.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}).toUpperCase();
+};
+const ago = ts => {
+  const s = (Date.now()-ts)/1000;
+  if (s < 60) return 'now';
+  if (s < 3600) return Math.floor(s/60) + 'm';
+  if (s < 86400) return Math.floor(s/3600) + 'h';
+  return Math.floor(s/86400) + 'd';
+};
+const PALETTE = ['#3dffa0','#3ecbff','#a78bfa','#ff7ad9','#ffd166','#ff6b6b','#66ffe3','#c2ff6b','#ff9e66','#7aa2ff'];
+const FINISHES = [
+  {t:'spin',   l:'SPIN',   v:1},
+  {t:'over',   l:'OVER',   v:2},
+  {t:'burst',  l:'BURST',  v:2},
+  {t:'xtreme', l:'XTREME', v:3},
+];
+const FIN = Object.fromEntries(FINISHES.map(f => [f.t, f]));
+function toast(msg, ico='⚡'){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span class="tico">${ico}</span><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 2600);
+}
+const haptic = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
+if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r){
+    r = Math.min(r, w/2, h/2);
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+  };
+}
+
+/*==STORE==*/
+const DB_KEY = 'bxarena.v1';
+const DEFAULTS = () => ({
+  players: [],            // {id, name, color, created}
+  matches: [],            // {id, a, b, winner, sa, sb, target, points:[{p,t,v,ts}], ts, dur}
+  launches: [],           // {id, p, dev, sp, ts}
+  pos: {},                // playerId -> {x,y}
+  settings: { target: 4, spMap: null, uuids: [] },
+});
+const HEXC = /^#[0-9a-fA-F]{3,8}$/;
+const IDOK = /^[a-z0-9]+$/i;
+const cleanId = v => (typeof v === 'string' && v.length <= 24 && IDOK.test(v)) ? v : null;
+// every byte that enters the store — from localStorage or an imported file —
+// goes through here, so hostile backups can't smuggle markup into render paths
+function sanitizeDb(data){
+  const out = DEFAULTS();
+  if (!data || typeof data !== 'object') return out;
+  const num = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
+  for (const p of (Array.isArray(data.players) ? data.players : [])){
+    const id = cleanId(p?.id);
+    if (!id) continue;
+    out.players.push({
+      id,
+      name: String(p.name ?? '').slice(0, 18) || 'Blader',
+      color: HEXC.test(String(p.color)) ? String(p.color) : PALETTE[out.players.length % PALETTE.length],
+      created: num(p.created, Date.now()),
+    });
+  }
+  const pids = new Set(out.players.map(p => p.id));
+  for (const m of (Array.isArray(data.matches) ? data.matches : [])){
+    const id = cleanId(m?.id), a = cleanId(m?.a), b = cleanId(m?.b), w = cleanId(m?.winner);
+    if (!id || !pids.has(a) || !pids.has(b) || (w !== a && w !== b)) continue;
+    out.matches.push({
+      id, a, b, winner: w,
+      sa: num(m.sa), sb: num(m.sb), target: num(m.target, 4),
+      ts: num(m.ts, Date.now()), dur: num(m.dur),
+      points: (Array.isArray(m.points) ? m.points : []).map(pt => ({
+        p: cleanId(pt?.p), t: FIN[pt?.t] ? pt.t : 'spin', v: num(pt?.v, 1), ts: num(pt?.ts),
+      })).filter(pt => pt.p === a || pt.p === b),
+    });
+  }
+  for (const la of (Array.isArray(data.launches) ? data.launches : [])){
+    const id = cleanId(la?.id), p = cleanId(la?.p);
+    if (!id) continue;
+    out.launches.push({ id, p: pids.has(p) ? p : null, dev: String(la.dev ?? '').slice(0, 32), sp: num(la.sp), ts: num(la.ts, Date.now()) });
+  }
+  if (data.pos && typeof data.pos === 'object')
+    for (const [k, v] of Object.entries(data.pos))
+      if (pids.has(k)) out.pos[k] = { x: num(v?.x), y: num(v?.y) };
+  const s = data.settings || {};
+  const tgt = num(s.target, 4);
+  out.settings.target = [4, 5, 7, 10].includes(tgt) ? tgt : 4;
+  if (s.spMap && Number.isInteger(s.spMap.off) && s.spMap.off >= 0 && s.spMap.off < 64
+      && [2, 4].includes(s.spMap.len) && ['le', 'be'].includes(s.spMap.endian))
+    out.settings.spMap = { off: s.spMap.off, len: s.spMap.len, endian: s.spMap.endian };
+  out.settings.uuids = (Array.isArray(s.uuids) ? s.uuids : [])
+    .filter(u => typeof u === 'string' && /^[0-9a-f-]{4,36}$/i.test(u)).slice(0, 32);
+  if (s.passAssign && typeof s.passAssign === 'object'){
+    out.settings.passAssign = {};
+    for (const [k, v] of Object.entries(s.passAssign)){
+      const pid = cleanId(v);
+      if (pid && pids.has(pid)) out.settings.passAssign[String(k).slice(0, 32)] = pid;
+    }
+  }
+  return out;
+}
+let db = DEFAULTS();
+try {
+  const raw = localStorage.getItem(DB_KEY);
+  if (raw) db = sanitizeDb(JSON.parse(raw));
+} catch(e) { console.warn('store load failed', e); }
+let _saveT = null;
+function save(){
+  clearTimeout(_saveT);
+  _saveT = setTimeout(() => {
+    try { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+    catch(e) { toast('Storage full — export your data', '⚠️'); }
+  }, 120);
+}
+const getPlayer = id => db.players.find(p => p.id === id);
+function nextColor(){
+  const used = new Set(db.players.map(p => p.color));
+  return PALETTE.find(c => !used.has(c)) || PALETTE[db.players.length % PALETTE.length];
+}
+function addPlayer(name, color, x, y){
+  const p = { id: uid(), name: name.trim().slice(0,18) || 'Blader', color: color || nextColor(), created: Date.now() };
+  db.players.push(p);
+  db.pos[p.id] = { x: x ?? (Math.random()-0.5)*160, y: y ?? (Math.random()-0.5)*160 };
+  save();
+  return p;
+}
+function deletePlayer(id){
+  db.players = db.players.filter(p => p.id !== id);
+  db.matches = db.matches.filter(m => m.a !== id && m.b !== id);
+  db.launches = db.launches.filter(l => l.p !== id);
+  delete db.pos[id];
+  for (const ps of passes.values()) if (ps.player === id) ps.player = null;
+  save();
+}
+function statsOf(id){
+  let w=0, l=0, x=0;
+  for (const m of db.matches){
+    if (m.a !== id && m.b !== id) continue;
+    m.winner === id ? w++ : l++;
+    x += m.points.filter(pt => pt.p === id && pt.t === 'xtreme').length;
+  }
+  let best = null;
+  for (const la of db.launches) if (la.p === id && (best == null || la.sp > best)) best = la.sp;
+  return { w, l, x, best, total: w + l };
+}
+function h2h(a, b){
+  const ms = db.matches.filter(m => (m.a===a && m.b===b) || (m.a===b && m.b===a));
+  return { aw: ms.filter(m => m.winner===a).length, bw: ms.filter(m => m.winner===b).length, ms };
+}
+function pairKey(a,b){ return a < b ? a+'|'+b : b+'|'+a; }
+function edgeList(){
+  const map = new Map();
+  for (const m of db.matches){
+    const k = pairKey(m.a, m.b);
+    if (!map.has(k)) map.set(k, { a: m.a < m.b ? m.a : m.b, b: m.a < m.b ? m.b : m.a, n: 0, last: 0 });
+    const e = map.get(k); e.n++; e.last = Math.max(e.last, m.ts);
+  }
+  return [...map.values()].filter(e => getPlayer(e.a) && getPlayer(e.b));
+}
+function bestSPAll(){
+  const best = new Map();
+  for (const la of db.launches){
+    if (!la.p || !getPlayer(la.p)) continue;
+    if (!best.has(la.p) || la.sp > best.get(la.p).sp) best.set(la.p, la);
+  }
+  return [...best.entries()].map(([p, la]) => ({ p, sp: la.sp, ts: la.ts })).sort((x,y) => y.sp - x.sp);
+}
+
+/*==GRAPH==*/
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let DPR = 1, W = 0, H = 0;
+const cam = { x: 0, y: 0, z: 1 };
+const nodes = new Map();   // playerId -> {p, x,y,vx,vy, r, pin, pop}
+let edges = [];
+let chipHits = [];         // {x,y,w,h,a,b} screen-space
+let particles = [];
+let simHeat = 60;          // physics frames remaining
+let curTab = 'arena';
+
+function wake(n = 90){ simHeat = Math.max(simHeat, n); }
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2.5);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  wake(30);
+}
+addEventListener('resize', resize);
+
+function syncGraph(){
+  const alive = new Set(db.players.map(p => p.id));
+  for (const id of [...nodes.keys()]) if (!alive.has(id)) nodes.delete(id);
+  for (const p of db.players){
+    if (!nodes.has(p.id)){
+      const saved = db.pos[p.id] || { x:(Math.random()-.5)*200, y:(Math.random()-.5)*200 };
+      nodes.set(p.id, { p, x:saved.x, y:saved.y, vx:0, vy:0, r:26, pin:false, pop:0 });
+    }
+    nodes.get(p.id).p = p;
+  }
+  edges = edgeList();
+  for (const n of nodes.values()){
+    const st = statsOf(n.p.id);
+    n.r = clamp(26 + st.w * 1.4, 26, 44);
+  }
+  wake();
+  updateHint();
+}
+function persistPositions(){
+  for (const [id, n] of nodes) db.pos[id] = { x: Math.round(n.x), y: Math.round(n.y) };
+  save();
+}
+function fitCamera(){
+  if (!nodes.size) { cam.x = 0; cam.y = 0; cam.z = 1; return; }
+  let minX=1e9, maxX=-1e9, minY=1e9, maxY=-1e9;
+  for (const n of nodes.values()){
+    minX = Math.min(minX, n.x - 70); maxX = Math.max(maxX, n.x + 70);
+    minY = Math.min(minY, n.y - 70); maxY = Math.max(maxY, n.y + 70);
+  }
+  cam.x = (minX + maxX) / 2; cam.y = (minY + maxY) / 2;
+  const z = Math.min(W / (maxX - minX), (H * 0.8) / (maxY - minY));
+  cam.z = clamp(z, 0.35, 1.6);
+}
+const toScreen = (x, y) => [ (x - cam.x) * cam.z + W/2, (y - cam.y) * cam.z + H/2 ];
+const toWorld  = (sx, sy) => [ (sx - W/2) / cam.z + cam.x, (sy - H/2) / cam.z + cam.y ];
+
+function physics(){
+  const ns = [...nodes.values()];
+  for (let i = 0; i < ns.length; i++){
+    const a = ns[i];
+    if (a.pin) continue;
+    let fx = -a.x * 0.0016, fy = -a.y * 0.0016;           // center gravity
+    for (let j = 0; j < ns.length; j++){
+      if (i === j) continue;
+      const b = ns[j];
+      let dx = a.x - b.x, dy = a.y - b.y;
+      let d2 = dx*dx + dy*dy;
+      if (d2 < 1) { dx = Math.random()-.5; dy = Math.random()-.5; d2 = 1; }
+      const d = Math.sqrt(d2);
+      const rep = Math.min(9000 / d2, 6);                  // repulsion
+      fx += dx / d * rep; fy += dy / d * rep;
+    }
+    a.vx = (a.vx + fx) * 0.86; a.vy = (a.vy + fy) * 0.86;
+  }
+  for (const e of edges){                                  // springs
+    const a = nodes.get(e.a), b = nodes.get(e.b);
+    if (!a || !b) continue;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.max(Math.sqrt(dx*dx + dy*dy), 1);
+    const rest = 175, k = 0.012;
+    const f = (d - rest) * k;
+    const ux = dx/d, uy = dy/d;
+    if (!a.pin){ a.vx += ux*f; a.vy += uy*f; }
+    if (!b.pin){ b.vx -= ux*f; b.vy -= uy*f; }
+  }
+  let energy = 0;
+  for (const n of ns){
+    if (n.pin) continue;
+    n.x += n.vx; n.y += n.vy;
+    energy += Math.abs(n.vx) + Math.abs(n.vy);
+  }
+  if (energy < 0.35) simHeat = Math.min(simHeat, 2);
+}
+
+function drawLightning(x1, y1, x2, y2, t){
+  const segs = 9, pts = [[x1, y1]];
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx*dx + dy*dy) || 1;
+  const nx = -dy/len, ny = dx/len;
+  for (let i = 1; i < segs; i++){
+    const f = i / segs;
+    const wob = Math.sin(t*0.02 + i*2.7) * Math.min(len*0.05, 11) * (Math.random()*.55 + .45);
+    pts.push([x1 + dx*f + nx*wob, y1 + dy*f + ny*wob]);
+  }
+  pts.push([x2, y2]);
+  const g = ctx.createLinearGradient(x1, y1, x2, y2);
+  g.addColorStop(0, '#3dffa0'); g.addColorStop(1, '#3ecbff');
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.shadowColor = '#3ecbff'; ctx.shadowBlur = 16;
+  ctx.strokeStyle = g;
+  for (const [wdt, al] of [[4.5, .28], [1.8, .95]]){
+    ctx.lineWidth = wdt; ctx.globalAlpha = al;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (const p of pts.slice(1)) ctx.lineTo(p[0], p[1]);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function burst(wx, wy, color){
+  for (let i = 0; i < 26; i++){
+    const a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 4;
+    particles.push({ x:wx, y:wy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, c: Math.random()<.5 ? color : (Math.random()<.5 ? '#3dffa0' : '#3ecbff') });
+  }
+  wake(80);
+}
+
+let T = 0;
+function render(){
+  T++;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  // dotted grid
+  const step = 46 * cam.z;
+  if (step > 14){
+    ctx.fillStyle = 'rgba(140,155,170,0.07)';
+    const [ox, oy] = toScreen(Math.floor((cam.x - W/2/cam.z)/46)*46, Math.floor((cam.y - H/2/cam.z)/46)*46);
+    for (let x = ox; x < W + step; x += step)
+      for (let y = oy; y < H + step; y += step){
+        ctx.beginPath(); ctx.arc(x, y, 1, 0, 7); ctx.fill();
+      }
+  }
+  chipHits = [];
+  // edges
+  for (const e of edges){
+    const a = nodes.get(e.a), b = nodes.get(e.b);
+    if (!a || !b) continue;
+    const [x1, y1] = toScreen(a.x, a.y), [x2, y2] = toScreen(b.x, b.y);
+    const g = ctx.createLinearGradient(x1, y1, x2, y2);
+    g.addColorStop(0, a.p.color); g.addColorStop(1, b.p.color);
+    const recent = (Date.now() - e.last) < 864e5 * 2;
+    ctx.strokeStyle = g;
+    ctx.globalAlpha = recent ? 0.5 : 0.26;
+    ctx.lineWidth = clamp(1 + Math.log2(e.n + 1) * 1.3, 1, 6) * cam.z;
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    const bend = 14 * cam.z;
+    const dx = x2-x1, dy = y2-y1, dl = Math.sqrt(dx*dx+dy*dy)||1;
+    const cxp = mx + (-dy/dl)*bend, cyp = my + (dx/dl)*bend;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(cxp, cyp, x2, y2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // record chip
+    if (cam.z > 0.55){
+      const r = h2h(e.a, e.b);
+      const label = r.aw + ' – ' + r.bw;
+      ctx.font = `700 ${11 * clamp(cam.z,.8,1.15)}px Rajdhani, sans-serif`;
+      const tw = ctx.measureText(label).width + 16;
+      const chx = (cxp + mx)/2, chy = (cyp + my)/2;
+      ctx.fillStyle = 'rgba(18,21,25,0.92)';
+      ctx.strokeStyle = 'rgba(70,80,95,0.7)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(chx - tw/2, chy - 10, tw, 20, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#aeb8c4';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, chx, chy + 1);
+      chipHits.push({ x: chx - tw/2 - 8, y: chy - 18, w: tw + 16, h: 36, a: e.a, b: e.b });
+    }
+  }
+  // drag-link lightning + target ring
+  if (drag.mode === 'node' && drag.target){
+    const a = nodes.get(drag.id), b = nodes.get(drag.target);
+    if (a && b){
+      const [x1, y1] = toScreen(a.x, a.y), [x2, y2] = toScreen(b.x, b.y);
+      drawLightning(x1, y1, x2, y2, T);
+    }
+  }
+  // nodes
+  for (const n of nodes.values()){
+    if (n.pop < 1) { n.pop = Math.min(1, n.pop + 0.08); wake(10); }
+    const [sx, sy] = toScreen(n.x, n.y);
+    const R = n.r * cam.z * (0.4 + 0.6 * easeOut(n.pop));
+    const isDrag = drag.mode === 'node' && drag.id === n.p.id;
+    const isTarget = drag.target === n.p.id;
+    const glow = isTarget ? 34 : isDrag ? 26 : 15;
+    ctx.save();
+    ctx.shadowColor = n.p.color; ctx.shadowBlur = glow * cam.z;
+    ctx.fillStyle = '#141a1f';
+    ctx.beginPath(); ctx.arc(sx, sy, R, 0, 7); ctx.fill();
+    ctx.lineWidth = (isTarget ? 3.4 : 2.2) * cam.z;
+    ctx.strokeStyle = n.p.color;
+    ctx.stroke();
+    ctx.restore();
+    // spinning accent ring (beyblade!)
+    ctx.save();
+    ctx.strokeStyle = n.p.color; ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 1.3 * cam.z;
+    ctx.setLineDash([5 * cam.z, 9 * cam.z]);
+    ctx.lineDashOffset = -T * 0.55 * (isDrag || isTarget ? 3 : 1);
+    ctx.beginPath(); ctx.arc(sx, sy, R + 5 * cam.z, 0, 7); ctx.stroke();
+    ctx.restore();
+    // initials
+    ctx.fillStyle = n.p.color;
+    ctx.font = `700 ${Math.max(R * 0.62, 10)}px Rajdhani, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const ini = n.p.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+    ctx.fillText(ini, sx, sy + 1);
+    // name + record label
+    if (cam.z > 0.4){
+      const st = statsOf(n.p.id);
+      ctx.fillStyle = 'rgba(233,238,244,.92)';
+      ctx.font = `600 ${clamp(13*cam.z, 10, 15)}px Inter, sans-serif`;
+      ctx.fillText(n.p.name, sx, sy + R + 15 * cam.z);
+      ctx.fillStyle = 'rgba(139,149,162,.85)';
+      ctx.font = `600 ${clamp(10.5*cam.z, 9, 12)}px Rajdhani, sans-serif`;
+      ctx.fillText(`${st.w}W · ${st.l}L${st.best ? ' · ' + fmtSP(st.best) + ' SP' : ''}`, sx, sy + R + 30 * cam.z);
+    }
+    if (isTarget){
+      ctx.fillStyle = '#fff';
+      ctx.font = `700 ${13 * cam.z}px Rajdhani, sans-serif`;
+      ctx.fillText('⚡ VS', sx, sy - R - 13 * cam.z);
+    }
+  }
+  // particles
+  particles = particles.filter(p => p.life > 0);
+  for (const p of particles){
+    p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy *= .96; p.life -= .02;
+    const [sx, sy] = toScreen(p.x, p.y);
+    ctx.globalAlpha = Math.max(p.life, 0);
+    ctx.fillStyle = p.c;
+    ctx.shadowColor = p.c; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(sx, sy, 2.4 * cam.z, 0, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+  if (particles.length) wake(10);
+}
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+let rafOn = true;
+function loop(){
+  if (curTab === 'arena' && rafOn){
+    if (simHeat > 0){ physics(); simHeat--; }
+    render();
+  }
+  requestAnimationFrame(loop);
+}
+document.addEventListener('visibilitychange', () => { rafOn = !document.hidden; if (rafOn) wake(30); });
+
+/* ----- pointer interaction ----- */
+const drag = { mode: null, id: null, target: null, sx:0, sy:0, moved:false, px:0, py:0, pinch:null };
+const pointers = new Map();
+function nodeAt(sx, sy){
+  let hit = null;
+  for (const n of nodes.values()){
+    const [nx, ny] = toScreen(n.x, n.y);
+    const R = n.r * cam.z + 12;
+    if ((sx-nx)**2 + (sy-ny)**2 < R*R) hit = n;   // last drawn = topmost
+  }
+  return hit;
+}
+function chipAt(sx, sy){
+  return chipHits.find(c => sx >= c.x && sx <= c.x + c.w && sy >= c.y && sy <= c.y + c.h);
+}
+cv.addEventListener('pointerdown', ev => {
+  cv.setPointerCapture(ev.pointerId);
+  pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+  if (pointers.size === 2){
+    const [p1, p2] = [...pointers.values()];
+    drag.pinch = { d: Math.hypot(p1.x-p2.x, p1.y-p2.y), z: cam.z, cx:(p1.x+p2.x)/2, cy:(p1.y+p2.y)/2, camx:cam.x, camy:cam.y };
+    drag.mode = 'pinch';
+    return;
+  }
+  const n = nodeAt(ev.clientX, ev.clientY);
+  drag.sx = ev.clientX; drag.sy = ev.clientY; drag.moved = false; drag.target = null;
+  if (n){
+    drag.mode = 'node'; drag.id = n.p.id; n.pin = true; wake();
+  } else {
+    drag.mode = 'pan'; drag.px = cam.x; drag.py = cam.y;
+  }
+  cv.classList.add('dragging');
+});
+cv.addEventListener('pointermove', ev => {
+  if (!pointers.has(ev.pointerId)) return;
+  pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+  if (drag.mode === 'pinch' && pointers.size === 2){
+    const [p1, p2] = [...pointers.values()];
+    const d = Math.hypot(p1.x-p2.x, p1.y-p2.y);
+    const nz = clamp(drag.pinch.z * d / drag.pinch.d, 0.22, 2.6);
+    const cx = (p1.x+p2.x)/2, cy = (p1.y+p2.y)/2;
+    cam.z = nz;
+    cam.x = drag.pinch.camx + (drag.pinch.cx - cx) / nz;
+    cam.y = drag.pinch.camy + (drag.pinch.cy - cy) / nz;
+    wake(5); return;
+  }
+  const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
+  if (Math.abs(dx) + Math.abs(dy) > 7) drag.moved = true;
+  if (drag.mode === 'node'){
+    const n = nodes.get(drag.id);
+    if (!n) return;
+    const [wx, wy] = toWorld(ev.clientX, ev.clientY);
+    n.x = wx; n.y = wy; n.vx = 0; n.vy = 0;
+    // battle target detection
+    let tgt = null, bd = 1e9;
+    for (const o of nodes.values()){
+      if (o.p.id === drag.id) continue;
+      const d = Math.hypot(o.x - wx, o.y - wy);
+      if (d < (o.r + n.r + 26) && d < bd){ bd = d; tgt = o.p.id; }
+    }
+    if (tgt !== drag.target){ drag.target = tgt; if (tgt) haptic(12); }
+    wake(5);
+  } else if (drag.mode === 'pan'){
+    cam.x = drag.px - dx / cam.z;
+    cam.y = drag.py - dy / cam.z;
+    wake(5);
+  }
+});
+function endPointer(ev){
+  pointers.delete(ev.pointerId);
+  cv.classList.remove('dragging');
+  if (drag.mode === 'pinch'){ if (pointers.size < 2) drag.mode = pointers.size ? 'pan' : null; drag.pinch = null; return; }
+  if (drag.mode === 'node'){
+    const n = nodes.get(drag.id);
+    if (n) n.pin = false;
+    if (drag.target && drag.moved){
+      const a = drag.id, b = drag.target;
+      haptic([18, 40, 18]);
+      openBattle(a, b);
+    } else if (!drag.moved && n){
+      openPlayerCard(n.p.id);
+    }
+    persistPositions();
+  } else if (drag.mode === 'pan' && !drag.moved){
+    const chip = chipAt(ev.clientX, ev.clientY);
+    if (chip) openH2H(chip.a, chip.b);
+  }
+  drag.mode = null; drag.id = null; drag.target = null;
+  wake();
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  const f = Math.exp(-ev.deltaY * 0.0016);
+  const [wx, wy] = toWorld(ev.clientX, ev.clientY);
+  cam.z = clamp(cam.z * f, 0.22, 2.6);
+  const [nx, ny] = toWorld(ev.clientX, ev.clientY);
+  cam.x += wx - nx; cam.y += wy - ny;
+  wake(5);
+}, { passive: false });
+cv.addEventListener('dblclick', ev => {
+  if (nodeAt(ev.clientX, ev.clientY)) return;
+  const [wx, wy] = toWorld(ev.clientX, ev.clientY);
+  promptNewPlayer(wx, wy);
+});
+
+function updateHint(){
+  const h = $('#arenaHint');
+  if (!db.players.length){ h.textContent = ''; return; }
+  if (db.players.length === 1) h.textContent = 'Add one more blader, then drag them together to battle';
+  else if (!db.matches.length) h.textContent = 'Drag one blader onto another to start a battle ⚡';
+  else h.textContent = '';
+  h.style.opacity = h.textContent ? 1 : 0;
+}
+
+/*==BATTLE==*/
+/* ----- sheet plumbing ----- */
+let openSheet = null;
+function showSheet(id){
+  closeSheets();
+  $('#scrim').classList.add('on');
+  $(id).classList.add('on');
+  openSheet = id;
+}
+function closeSheets(){
+  $('#scrim').classList.remove('on');
+  $$('.sheet').forEach(s => s.classList.remove('on'));
+  openSheet = null;
+}
+$('#scrim').addEventListener('click', () => {
+  if (openSheet === '#bSheet') return;   // battles don't dismiss by accident
+  closeSheets();
+});
+addEventListener('keydown', ev => {
+  if (ev.key === 'Escape'){
+    if ($('#winOv').classList.contains('on')) return;
+    closeSheets();
+  }
+});
+
+/* ----- tabs ----- */
+function setTab(t){
+  curTab = t;
+  $$('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('#panel-history').classList.toggle('on', t === 'history');
+  $('#panel-pass').classList.toggle('on', t === 'pass');
+  $('#fabAdd').style.display = t === 'arena' ? '' : 'none';
+  $('#arenaHint').style.display = t === 'arena' ? '' : 'none';
+  if (t === 'history') renderHistory();
+  if (t === 'pass') renderPass();
+  if (t === 'arena') wake();
+}
+$$('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+
+/* ----- battle ----- */
+let battle = null;
+function openBattle(aId, bId){
+  if (aId === bId) return;
+  const A = getPlayer(aId), B = getPlayer(bId);
+  if (!A || !B) return;
+  battle = { a: aId, b: bId, points: [], sa: 0, sb: 0, target: db.settings.target, ts: Date.now() };
+  $('#bTarget').value = String(battle.target);
+  buildFinishButtons();
+  renderBattle();
+  showSheet('#bSheet');
+}
+function buildFinishButtons(){
+  for (const side of ['a', 'b']){
+    const row = $(`.finrow[data-side="${side}"]`);
+    row.innerHTML = FINISHES.map(f => `
+      <button class="finbtn ${f.t === 'xtreme' ? 'xt' : ''}" data-side="${side}" data-t="${f.t}">
+        <span class="fv">+${f.v}</span><span class="fl">${f.l}</span>
+      </button>`).join('');
+  }
+  $$('.finbtn').forEach(b => b.addEventListener('click', () => addPoint(b.dataset.side, b.dataset.t)));
+}
+function renderBattle(){
+  if (!battle) return;
+  const A = getPlayer(battle.a), B = getPlayer(battle.b);
+  const eA = $('#bA'), eB = $('#bB');
+  eA.querySelector('.nm').textContent = A.name; eB.querySelector('.nm').textContent = B.name;
+  eA.querySelector('.nm').style.color = A.color; eB.querySelector('.nm').style.color = B.color;
+  eA.querySelector('.sc').textContent = battle.sa; eB.querySelector('.sc').textContent = battle.sb;
+  eA.querySelector('.sc').style.color = A.color; eB.querySelector('.sc').style.color = B.color;
+  $('#bALabel').innerHTML = `<span class="pdot" style="background:${A.color}"></span>${esc(A.name)} scores`;
+  $('#bBLabel').innerHTML = `<span class="pdot" style="background:${B.color}"></span>${esc(B.name)} scores`;
+  $('#bLog').innerHTML = battle.points.map(pt => {
+    const P = getPlayer(pt.p);
+    return `<span class="pt" style="border-color:${P.color}55;color:${P.color}">${esc(P.name.split(' ')[0])} · ${FIN[pt.t].l} +${pt.v}</span>`;
+  }).join('') || '<span style="font-size:11.5px;color:var(--faint)">No points yet — let it rip</span>';
+  $('#bUndo').disabled = !battle.points.length;
+  updateBattleSP();
+}
+function updateBattleSP(){
+  if (!battle) return;
+  for (const [id, el] of [[battle.a, $('#bA')], [battle.b, $('#bB')]]){
+    const live = el.querySelector('.splive');
+    let last = null;
+    for (const ps of passes.values())
+      if (ps.player === id && ps.lastSP) last = ps.lastSP;
+    live.innerHTML = last ? `⚡ <b>${fmtSP(last.sp)}</b> SP` : '';
+    live.style.color = getPlayer(id)?.color || '';
+  }
+}
+function addPoint(side, type){
+  if (!battle) return;
+  const pid = side === 'a' ? battle.a : battle.b;
+  const f = FIN[type];
+  battle.points.push({ p: pid, t: type, v: f.v, ts: Date.now() });
+  side === 'a' ? battle.sa += f.v : battle.sb += f.v;
+  battle.target = parseInt($('#bTarget').value, 10) || 4;
+  haptic(14);
+  renderBattle();
+  if (battle.sa >= battle.target || battle.sb >= battle.target) finishBattle();
+}
+$('#bUndo').addEventListener('click', () => {
+  if (!battle || !battle.points.length) return;
+  const pt = battle.points.pop();
+  pt.p === battle.a ? battle.sa -= pt.v : battle.sb -= pt.v;
+  renderBattle();
+});
+$('#bCancel').addEventListener('click', () => {
+  battle = null;
+  closeSheets();
+  toast('Battle abandoned', '💨');
+});
+$('#bTarget').addEventListener('change', () => {
+  if (!battle) return;
+  battle.target = parseInt($('#bTarget').value, 10) || 4;
+  if (battle.sa >= battle.target || battle.sb >= battle.target) finishBattle();
+});
+function finishBattle(){
+  const winId = battle.sa >= battle.target ? battle.a : battle.b;
+  const Wp = getPlayer(winId), Lp = getPlayer(winId === battle.a ? battle.b : battle.a);
+  const m = {
+    id: uid(), a: battle.a, b: battle.b, winner: winId,
+    sa: battle.sa, sb: battle.sb, target: battle.target,
+    points: battle.points, ts: battle.ts, dur: Date.now() - battle.ts,
+  };
+  db.matches.push(m);
+  save();
+  battle = null;
+  closeSheets();
+  syncGraph();
+  const na = nodes.get(m.a), nb = nodes.get(m.b);
+  if (na && nb) burst((na.x + nb.x)/2, (na.y + nb.y)/2, Wp.color);
+  $('#wName').textContent = Wp.name;
+  $('#wName').style.color = Wp.color;
+  $('#wScore').textContent = `${m.sa} – ${m.sb}  over  ${Lp.name}`;
+  $('#winOv').classList.add('on');
+  haptic([30, 60, 30, 60, 80]);
+}
+$('#wDone').addEventListener('click', () => {
+  $('#winOv').classList.remove('on');
+  setTab('arena');
+});
+
+/* ----- player card ----- */
+let cardId = null;
+function openPlayerCard(id){
+  const P = getPlayer(id);
+  if (!P) return;
+  cardId = id;
+  const st = statsOf(id);
+  const ini = P.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const ava = $('#pAva');
+  ava.textContent = ini;
+  ava.style.background = P.color;
+  ava.style.boxShadow = `0 0 22px -4px ${P.color}`;
+  $('#pName').value = P.name;
+  $('#stW').textContent = st.w; $('#stL').textContent = st.l; $('#stX').textContent = st.x;
+  $('#stSP').textContent = st.best ? fmtSP(st.best) : '—';
+  $('#pColors').innerHTML = PALETTE.map(c =>
+    `<button class="cdot ${c === P.color ? 'on' : ''}" style="background:${c};color:${c}" data-c="${c}" aria-label="colour"></button>`).join('');
+  $$('#pColors .cdot').forEach(d => d.addEventListener('click', () => {
+    P.color = d.dataset.c; save(); syncGraph(); openPlayerCard(id);
+  }));
+  const rivals = db.players.filter(o => o.id !== id).map(o => {
+    const r = h2h(id, o.id);
+    return { o, r, n: r.aw + r.bw };
+  }).filter(x => x.n > 0).sort((x, y) => y.n - x.n);
+  $('#pRivals').innerHTML = rivals.length ? rivals.map(({o, r}) => `
+    <div class="rival">
+      <span class="pdot" style="background:${o.color};box-shadow:0 0 7px ${o.color}"></span>
+      <span>${esc(o.name)}</span>
+      <span class="rec" style="color:${r.aw > r.bw ? 'var(--green)' : r.aw < r.bw ? 'var(--red)' : 'var(--dim)'}">${r.aw}–${r.bw}</span>
+    </div>`).join('')
+    : `<div style="color:var(--faint);font-size:13px;padding:6px 0 10px">No battles yet. Drag ${esc(P.name)} onto a rival.</div>`;
+  showSheet('#pCard');
+}
+$('#pName').addEventListener('change', () => {
+  const P = getPlayer(cardId);
+  if (!P) return;
+  P.name = $('#pName').value.trim().slice(0, 18) || P.name;
+  $('#pName').value = P.name;
+  save(); syncGraph();
+});
+$('#pBattle').addEventListener('click', () => {
+  const others = db.players.filter(p => p.id !== cardId);
+  if (!others.length){ toast('Add a rival first', '👥'); return; }
+  if (others.length === 1){ openBattle(cardId, others[0].id); return; }
+  // opponent picker
+  $('#h2hBody').innerHTML = `
+    <h3 class="ph" style="font-size:18px;margin-bottom:12px">CHOOSE OPPONENT</h3>
+    ${others.map(o => `
+      <button class="btn ghost" style="width:100%;justify-content:flex-start;margin-bottom:8px" data-op="${o.id}">
+        <span class="pdot" style="background:${o.color};box-shadow:0 0 7px ${o.color}"></span>${esc(o.name)}
+      </button>`).join('')}`;
+  showSheet('#h2h');
+  $$('#h2hBody [data-op]').forEach(b => b.addEventListener('click', () => openBattle(cardId, b.dataset.op)));
+});
+$('#pDelete').addEventListener('click', () => {
+  const P = getPlayer(cardId);
+  if (!P) return;
+  if (!confirm(`Delete ${P.name}? Their matches and records go too.`)) return;
+  deletePlayer(cardId);
+  closeSheets(); syncGraph();
+  toast(`${P.name} left the arena`, '👋');
+});
+
+/* ----- h2h ----- */
+function openH2H(aId, bId){
+  const A = getPlayer(aId), B = getPlayer(bId);
+  if (!A || !B) return;
+  const r = h2h(aId, bId);
+  const last = r.ms.slice(-3).reverse();
+  $('#h2hBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;margin:6px 0 4px">
+      <div style="font-family:var(--disp);font-weight:700;font-size:19px;color:${A.color}">${esc(A.name)}</div>
+      <div style="font-family:var(--disp);font-weight:700;font-size:30px;letter-spacing:.1em;padding:0 14px">${r.aw}<span style="color:var(--faint);font-size:20px"> – </span>${r.bw}</div>
+      <div style="font-family:var(--disp);font-weight:700;font-size:19px;color:${B.color}">${esc(B.name)}</div>
+    </div>
+    <p style="text-align:center;color:var(--faint);font-size:11.5px;letter-spacing:.16em;margin-bottom:14px">RIVALRY · ${r.ms.length} BATTLE${r.ms.length === 1 ? '' : 'S'}</p>
+    ${last.map(m => {
+      const wp = getPlayer(m.winner);
+      return `<div class="rival" style="font-size:12.5px"><span class="pdot" style="background:${wp?.color}"></span>${esc(wp?.name || '?')} won ${m.a === m.winner ? m.sa + '–' + m.sb : m.sb + '–' + m.sa}<span class="rec" style="color:var(--faint);font-weight:400;font-size:11px">${ago(m.ts)}</span></div>`;
+    }).join('')}
+    <button class="btn primary" style="width:100%;margin-top:16px" id="h2hGo">⚡ BATTLE AGAIN</button>`;
+  showSheet('#h2h');
+  $('#h2hGo').addEventListener('click', () => openBattle(aId, bId));
+}
+
+/* ----- add player / onboarding ----- */
+let addPos = null;
+function promptNewPlayer(wx, wy){
+  addPos = { x: wx, y: wy };
+  $('#addName').value = '';
+  const def = nextColor();
+  $('#addColors').innerHTML = PALETTE.map(c =>
+    `<button class="cdot ${c === def ? 'on' : ''}" style="background:${c};color:${c}" data-c="${c}" aria-label="colour"></button>`).join('');
+  $$('#addColors .cdot').forEach(d => d.addEventListener('click', () => {
+    $$('#addColors .cdot').forEach(x => x.classList.remove('on'));
+    d.classList.add('on');
+  }));
+  showSheet('#addSheet');
+  setTimeout(() => $('#addName').focus(), 250);
+}
+function commitNewPlayer(){
+  const name = $('#addName').value.trim();
+  if (!name){ $('#addName').focus(); return; }
+  const color = $('#addColors .cdot.on')?.dataset.c || nextColor();
+  const p = addPlayer(name, color, addPos?.x, addPos?.y);
+  closeSheets(); syncGraph();
+  toast(`${p.name} enters the arena`, '🌀');
+}
+$('#addGo').addEventListener('click', commitNewPlayer);
+$('#addName').addEventListener('keydown', ev => { if (ev.key === 'Enter') commitNewPlayer(); });
+$('#fabAdd').addEventListener('click', () => {
+  const [wx, wy] = toWorld(W/2 + (Math.random()-.5)*120, H/2 + (Math.random()-.5)*120);
+  promptNewPlayer(wx, wy);
+});
+
+let obCount = 0;
+function obRow(){
+  const c = PALETTE[obCount++ % PALETTE.length];
+  const row = document.createElement('div');
+  row.className = 'obRow';
+  row.innerHTML = `<span class="cdot" style="background:${c};color:${c}" data-c="${c}"></span>
+    <input class="field" maxlength="18" placeholder="Blader ${obCount}" autocomplete="off">`;
+  row.querySelector('.cdot').addEventListener('click', ev => {
+    const i = (PALETTE.indexOf(ev.target.dataset.c) + 1) % PALETTE.length;
+    ev.target.dataset.c = PALETTE[i];
+    ev.target.style.background = PALETTE[i];
+    ev.target.style.color = PALETTE[i];
+  });
+  $('#obRows').appendChild(row);
+  row.querySelector('input').addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#obGo').click(); });
+  return row;
+}
+$('#obAdd').addEventListener('click', () => { obRow().querySelector('input').focus(); });
+$('#obGo').addEventListener('click', () => {
+  const rows = $$('#obRows .obRow');
+  const entries = rows.map(r => ({ name: r.querySelector('input').value.trim(), color: r.querySelector('.cdot').dataset.c })).filter(e => e.name);
+  if (entries.length < 2){ toast('Add at least two bladers', '👥'); return; }
+  const R = 130;
+  entries.forEach((e, i) => {
+    const a = (i / entries.length) * Math.PI * 2 - Math.PI/2;
+    addPlayer(e.name, e.color, Math.cos(a) * R, Math.sin(a) * R);
+  });
+  $('#onboard').classList.remove('on');
+  syncGraph(); fitCamera(); wake(120);
+  toast('LET IT RIP', '🌀');
+});
+
+/* ----- settings ----- */
+$('#btnSettings').addEventListener('click', () => {
+  $('#setTarget').value = String(db.settings.target);
+  showSheet('#sSheet');
+});
+$('#setTarget').addEventListener('change', () => {
+  db.settings.target = parseInt($('#setTarget').value, 10) || 4;
+  save();
+});
+$('#btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bx-arena-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Exported', '💾');
+});
+$('#btnImport').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', async ev => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!Array.isArray(data.players)) throw new Error('bad file');
+    db = sanitizeDb(data);
+    save(); syncGraph(); fitCamera(); closeSheets();
+    toast('Data imported', '💾');
+  } catch(e){ toast('Import failed — not a BX Arena file', '⚠️'); }
+  ev.target.value = '';
+});
+$('#btnWipe').addEventListener('click', () => {
+  if (!confirm('Erase ALL players, matches and records?')) return;
+  db = DEFAULTS(); save(); syncGraph(); closeSheets();
+  $('#onboard').classList.add('on');
+  if (!$('#obRows').children.length){ obRow(); obRow(); }
+});
+
+/*==HISTORY==*/
+let histFilter = null;
+function renderHistory(){
+  const fbox = $('#histFilters');
+  fbox.innerHTML = `<button class="chip ${!histFilter ? 'on' : ''}" data-f="">All</button>` +
+    db.players.map(p => `
+      <button class="chip ${histFilter === p.id ? 'on' : ''}" data-f="${p.id}">
+        <span class="pdot" style="background:${p.color}"></span>${esc(p.name)}
+      </button>`).join('');
+  $$('#histFilters .chip').forEach(c => c.addEventListener('click', () => {
+    histFilter = c.dataset.f || null;
+    renderHistory();
+  }));
+  const list = $('#histList');
+  let ms = [...db.matches].sort((a, b) => b.ts - a.ts);
+  if (histFilter) ms = ms.filter(m => m.a === histFilter || m.b === histFilter);
+  if (!ms.length){
+    list.innerHTML = `<div class="empty"><span class="big">🌀</span>${histFilter ? 'No battles for this blader yet.' : 'No battles recorded yet.<br>Head to the arena and drag two bladers together.'}</div>`;
+    return;
+  }
+  let html = '', lastDay = '';
+  for (const m of ms){
+    const day = fmtDay(m.ts);
+    if (day !== lastDay){ html += `<div class="day">${day}</div>`; lastDay = day; }
+    const A = getPlayer(m.a), B = getPlayer(m.b);
+    if (!A || !B) continue;
+    const aWin = m.winner === m.a;
+    const sp = {};
+    for (const la of db.launches){
+      if (la.ts >= m.ts && la.ts <= m.ts + m.dur + 5000 && (la.p === m.a || la.p === m.b))
+        sp[la.p] = Math.max(sp[la.p] || 0, la.sp);
+    }
+    html += `
+    <div class="match" data-m="${m.id}">
+      <div class="mrow">
+        <span class="pdot" style="background:${A.color};box-shadow:0 0 6px ${A.color}"></span>
+        <span class="mname ${aWin ? '' : 'lose'}" style="${aWin ? 'color:' + A.color : ''}">${esc(A.name)}</span>
+        <span class="msc">${m.sa}–${m.sb}</span>
+        <span class="mname ${aWin ? 'lose' : ''}" style="${aWin ? '' : 'color:' + B.color}">${esc(B.name)}</span>
+        <span class="pdot" style="background:${B.color};box-shadow:0 0 6px ${B.color}"></span>
+        <span class="mtime">${fmtTime(m.ts)}</span>
+      </div>
+      <div class="mdetail">
+        <div class="mpts">${m.points.map(pt => {
+          const P = getPlayer(pt.p);
+          return `<span class="pt" style="border-color:${P?.color}55;color:${P?.color}">${FIN[pt.t].l} +${pt.v}</span>`;
+        }).join('')}</div>
+        <div class="mfoot">
+          <span>first to ${m.target}</span>
+          <span>· ${Math.max(1, Math.round(m.dur / 60000))} min</span>
+          ${sp[m.a] ? `<span>· ${esc(A.name.split(' ')[0])} ⚡${fmtSP(sp[m.a])}</span>` : ''}
+          ${sp[m.b] ? `<span>· ${esc(B.name.split(' ')[0])} ⚡${fmtSP(sp[m.b])}</span>` : ''}
+          <button class="del" data-del="${m.id}">delete</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html;
+  $$('#histList .match').forEach(el => el.addEventListener('click', ev => {
+    if (ev.target.dataset.del) return;
+    el.classList.toggle('open');
+  }));
+  $$('#histList .del').forEach(b => b.addEventListener('click', () => {
+    if (!confirm('Delete this battle from the record?')) return;
+    db.matches = db.matches.filter(m => m.id !== b.dataset.del);
+    save(); renderHistory(); syncGraph();
+  }));
+}
+
+/*==BLE==*/
+const NUS = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const CANDIDATE_SERVICES = () => [...new Set([
+  NUS,
+  'battery_service', 'device_information',
+  '0000ffe0-0000-1000-8000-00805f9b34fb',   // HM-10 style UART
+  '0000fff0-0000-1000-8000-00805f9b34fb',
+  '0000ae00-0000-1000-8000-00805f9b34fb',
+  ...(db.settings.uuids || []),
+])];
+const passes = new Map();   // id -> {id, name, device, player, lastSP, sim, ok}
+let rawLines = [];
+
+function passCount(){ return [...passes.values()].filter(p => p.ok).length; }
+function updatePassDot(){ $('#passDot').classList.toggle('show', passCount() > 0); }
+
+function logRaw(name, bytes, cands){
+  const hex = [...bytes].map(b => b.toString(16).padStart(2, '0')).join(' ');
+  const cstr = cands.map(c =>
+    `<span style="color:#3ecbff;cursor:pointer;text-decoration:underline" data-map='${JSON.stringify(c)}'>${fmtSP(c.val)} (u${c.len * 8}${c.endian}@${c.off})</span>`
+  ).join(' · ');
+  rawLines.unshift(`<div><span style="color:#5c6673">[${esc(name)}]</span> ${hex}${cands.length ? ' → ' + cstr : ''}</div>`);
+  rawLines = rawLines.slice(0, 40);
+  const el = $('#rawlog');
+  el.innerHTML = rawLines.join('');
+  el.querySelectorAll('[data-map]').forEach(s => s.addEventListener('click', () => {
+    db.settings.spMap = JSON.parse(s.dataset.map);
+    save();
+    toast(`Shoot power locked to byte ${db.settings.spMap.off}`, '🔧');
+  }));
+}
+function spCandidates(bytes){
+  const out = [];
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const inRange = v => v >= 1500 && v <= 45000;
+  for (let o = 0; o + 2 <= bytes.length; o++){
+    const le = dv.getUint16(o, true), be = dv.getUint16(o, false);
+    if (inRange(le)) out.push({ val: le, off: o, len: 2, endian: 'le' });
+    if (inRange(be) && be !== le) out.push({ val: be, off: o, len: 2, endian: 'be' });
+  }
+  for (let o = 0; o + 4 <= bytes.length; o++){
+    const le = dv.getUint32(o, true);
+    if (inRange(le)) out.push({ val: le, off: o, len: 4, endian: 'le' });
+  }
+  return out.slice(0, 6);
+}
+function decodeSP(bytes){
+  const m = db.settings.spMap;
+  if (m && m.off + m.len <= bytes.length){
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const v = m.len === 2 ? dv.getUint16(m.off, m.endian === 'le') : dv.getUint32(m.off, m.endian === 'le');
+    return (v >= 500 && v <= 60000) ? v : null;
+  }
+  const c = spCandidates(bytes);
+  return c.length ? c.sort((a, b) => (a.len - b.len) || (a.off - b.off))[0].val : null;
+}
+function handlePacket(pass, dataView){
+  const bytes = new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength);
+  if (!bytes.length) return;
+  const cands = spCandidates(bytes);
+  logRaw(pass.name, bytes, cands);
+  let sp;
+  if (db.settings.spMap){
+    sp = decodeSP(bytes);
+  } else if (cands.length){
+    // auto-detect: the offset that keeps producing plausible values across packets wins
+    pass.votes = pass.votes || {};
+    for (const c of cands){
+      const k = c.off + ':' + c.len + ':' + c.endian;
+      // values that are exact multiples of 256 are usually ghost reads of a
+      // neighbouring offset's high byte — weight them down
+      pass.votes[k] = (pass.votes[k] || 0) + (c.val % 256 === 0 ? 0.4 : 1);
+    }
+    sp = cands.slice().sort((a, b) =>
+      (pass.votes[b.off + ':' + b.len + ':' + b.endian] || 0) - (pass.votes[a.off + ':' + a.len + ':' + a.endian] || 0)
+      || (a.len - b.len) || (a.endian === 'le' ? -1 : 1) || (a.off - b.off))[0].val;
+  }
+  if (sp == null) return;
+  const now = Date.now();
+  if (pass.lastSP && now - pass.lastSP.ts < 900 && pass.lastSP.sp === sp) return;  // debounce dupes
+  pass.lastSP = { sp, ts: now };
+  recordLaunch(pass, sp);
+}
+function recordLaunch(pass, sp){
+  const pid = pass.player;
+  const prevBest = pid ? statsOf(pid).best : null;
+  db.launches.push({ id: uid(), p: pid || null, dev: pass.name, sp, ts: Date.now() });
+  if (db.launches.length > 600) db.launches = db.launches.slice(-600);
+  save();
+  const P = pid ? getPlayer(pid) : null;
+  if (P && (prevBest == null || sp > prevBest)){
+    toast(`NEW RECORD — ${P.name} · ${fmtSP(sp)} SP`, '🏆');
+    const n = nodes.get(pid);
+    if (n) burst(n.x, n.y, P.color);
+    syncGraph();
+  } else {
+    toast(`${P ? P.name : 'Unassigned pass'} · ${fmtSP(sp)} SP`, '⚡');
+  }
+  haptic(20);
+  if (curTab === 'pass') renderPass();
+  if (battle) updateBattleSP();
+}
+
+async function connectPass(){
+  if (!navigator.bluetooth){ renderPass(); toast('Bluetooth not available in this browser', '⚠️'); return; }
+  let device;
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: CANDIDATE_SERVICES(),
+    });
+  } catch(e){ return; }   // user cancelled
+  const pass = {
+    id: uid(), name: device.name || 'Battle Pass', device,
+    player: db.settings.passAssign?.[device.name] || null,
+    lastSP: null, sim: false, ok: false,
+  };
+  if (pass.player && !getPlayer(pass.player)) pass.player = null;
+  passes.set(pass.id, pass);
+  renderPass();
+  // harvest advertised service UUIDs for future connects
+  try {
+    device.addEventListener('advertisementreceived', ev => {
+      const found = (ev.uuids || []).filter(u => !db.settings.uuids.includes(u));
+      if (found.length){
+        db.settings.uuids.push(...found); save();
+        toast('Learned new service IDs from the pass — reconnect if data is missing', '🔧');
+      }
+    });
+    device.watchAdvertisements && device.watchAdvertisements().catch(() => {});
+  } catch(e){}
+  device.addEventListener('gattserverdisconnected', () => {
+    pass.ok = false;
+    renderPass(); updatePassDot();
+    toast(`${pass.name} disconnected`, '📴');
+  });
+  try {
+    const server = await device.gatt.connect();
+    let hooked = 0;
+    let services = [];
+    try { services = await server.getPrimaryServices(); } catch(e){}
+    for (const svc of services){
+      let chars = [];
+      try { chars = await svc.getCharacteristics(); } catch(e){ continue; }
+      for (const ch of chars){
+        if (ch.properties.notify || ch.properties.indicate){
+          try {
+            await ch.startNotifications();
+            ch.addEventListener('characteristicvaluechanged', ev => handlePacket(pass, ev.target.value));
+            hooked++;
+          } catch(e){}
+        }
+      }
+    }
+    pass.ok = true;
+    updatePassDot(); renderPass();
+    toast(hooked ? `${pass.name} connected — launch to see data` : `${pass.name} connected, but no data channels found yet`, '🔗');
+    if (!hooked) toast('Try re-pairing once — the pass may advertise its service on reconnect', '🔧');
+  } catch(e){
+    toast('Connection failed — hold the pass button to keep it awake and retry', '⚠️');
+    passes.delete(pass.id);
+    renderPass();
+  }
+}
+function addSimPass(){
+  const pass = { id: uid(), name: 'Sim Pass ' + (1 + [...passes.values()].filter(p => p.sim).length), device: null, player: null, lastSP: null, sim: true, ok: true };
+  passes.set(pass.id, pass);
+  updatePassDot(); renderPass();
+  toast('Simulator pass added — assign a blader and LAUNCH', '🧪');
+}
+function simLaunch(passId){
+  const pass = passes.get(passId);
+  if (!pass) return;
+  let sp = Math.round(5500 + Math.random() * 9500);
+  if (Math.random() < 0.1) sp += Math.round(3000 + Math.random() * 5000);   // heater
+  pass.lastSP = { sp, ts: Date.now() };
+  recordLaunch(pass, sp);
+}
+function assignPass(passId, playerId){
+  const pass = passes.get(passId);
+  if (!pass) return;
+  pass.player = playerId || null;
+  if (!pass.sim && pass.name){
+    db.settings.passAssign = db.settings.passAssign || {};
+    db.settings.passAssign[pass.name] = pass.player;
+    save();
+  }
+  renderPass();
+  if (battle) updateBattleSP();
+}
+function removePass(passId){
+  const pass = passes.get(passId);
+  if (!pass) return;
+  try { pass.device?.gatt?.connected && pass.device.gatt.disconnect(); } catch(e){}
+  passes.delete(passId);
+  updatePassDot(); renderPass();
+}
+
+function renderPass(){
+  const notice = $('#btNotice');
+  if (!navigator.bluetooth){
+    notice.innerHTML = `<div class="notice">Web Bluetooth isn't available in this browser.
+      On iPhone / iPad, try the <b>Bluefy</b> browser; on desktop or Android use <b>Chrome</b> or <b>Edge</b>.
+      The <b>Simulator</b> below works everywhere.</div>`;
+    $('#btnConnect').disabled = true;
+  } else {
+    notice.innerHTML = '';
+    $('#btnConnect').disabled = false;
+  }
+  const list = $('#passList');
+  const ps = [...passes.values()];
+  list.innerHTML = ps.length ? ps.map(p => {
+    const P = p.player ? getPlayer(p.player) : null;
+    return `
+    <div class="pass ${p.ok ? 'live' : ''}">
+      <div class="prow">
+        <div class="picon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
+        </div>
+        <div style="min-width:0">
+          <div class="pnm">${esc(p.name)}</div>
+          <div class="pst">${p.sim ? '🧪 simulator' : p.ok ? '● connected' : '○ disconnected'}${P ? ` · <span style="color:${P.color}">${esc(P.name)}</span>` : ' · unassigned'}</div>
+        </div>
+        <div class="psp" style="color:${P ? P.color : 'var(--txt)'}">${p.lastSP ? fmtSP(p.lastSP.sp) : '—'}<small>SHOOT POWER</small></div>
+      </div>
+      <div class="passign">
+        <select data-assign="${p.id}" aria-label="Assign blader">
+          <option value="">Assign blader…</option>
+          ${db.players.map(pl => `<option value="${pl.id}" ${p.player === pl.id ? 'selected' : ''}>${esc(pl.name)}</option>`).join('')}
+        </select>
+        ${p.sim ? `<button class="btn primary sm" data-launch="${p.id}">LAUNCH</button>` : ''}
+        ${!p.sim && !p.ok ? `<button class="btn sm" data-reconnect="${p.id}">Reconnect</button>` : ''}
+        <button class="btn ghost sm" data-remove="${p.id}">✕</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty" style="padding:26px 20px">No passes yet. Connect a Beyblade X Battle Pass over Bluetooth,<br>or add a simulator to play with the feature.</div>`;
+  list.querySelectorAll('[data-assign]').forEach(s => s.addEventListener('change', () => assignPass(s.dataset.assign, s.value)));
+  list.querySelectorAll('[data-launch]').forEach(b => b.addEventListener('click', () => simLaunch(b.dataset.launch)));
+  list.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => removePass(b.dataset.remove)));
+  list.querySelectorAll('[data-reconnect]').forEach(b => b.addEventListener('click', async () => {
+    const pass = passes.get(b.dataset.reconnect);
+    if (!pass?.device) return;
+    try {
+      await pass.device.gatt.connect();
+      pass.ok = true; renderPass(); updatePassDot();
+      toast(`${pass.name} reconnected`, '🔗');
+    } catch(e){ toast('Reconnect failed — try Connect Pass again', '⚠️'); }
+  }));
+  // leaderboard
+  const lb = bestSPAll();
+  $('#lbBox').innerHTML = lb.length ? lb.map((r, i) => {
+    const P = getPlayer(r.p);
+    return `
+    <div class="lbrow">
+      <span class="rank ${i === 0 ? 'r1' : ''}">${i + 1}</span>
+      <span class="pdot" style="background:${P.color};box-shadow:0 0 7px ${P.color}"></span>
+      <span style="font-weight:600">${esc(P.name)}</span>
+      <span class="lbsp" style="color:${P.color}">${fmtSP(r.sp)}<small>SP</small></span>
+    </div>`;
+  }).join('') : `<div style="color:var(--faint);font-size:13px;text-align:center;padding:14px">No launches recorded. Assign a pass to a blader and let it rip.</div>`;
+  // recent launches
+  const feed = [...db.launches].slice(-12).reverse();
+  $('#launchFeed').innerHTML = feed.length ? feed.map(la => {
+    const P = la.p ? getPlayer(la.p) : null;
+    return `
+    <div class="launchrow">
+      <span class="pdot" style="background:${P ? P.color : 'var(--faint)'}"></span>
+      <span>${P ? esc(P.name) : 'Unassigned'}</span>
+      <b style="color:${P ? P.color : 'var(--txt)'}">${fmtSP(la.sp)}</b>
+      <span class="lt">${ago(la.ts)}</span>
+    </div>`;
+  }).join('') : `<div style="color:var(--faint);font-size:13px;text-align:center;padding:14px">Launch history shows up here.</div>`;
+}
+$('#btnConnect').addEventListener('click', connectPass);
+$('#btnSim').addEventListener('click', addSimPass);
+$('#btnResetMap').addEventListener('click', () => {
+  db.settings.spMap = null; save();
+  toast('Byte mapping reset to auto-detect', '🔧');
+});
+
+/*==BOOT==*/
+resize();
+syncGraph();
+fitCamera();
+buildFinishButtons();
+if (!db.players.length){
+  $('#onboard').classList.add('on');
+  obRow(); obRow();
+} else {
+  updateHint();
+}
+setTab('arena');
+loop();
+setInterval(persistPositions, 20000);
+
+</script>
+</body>
+</html>
