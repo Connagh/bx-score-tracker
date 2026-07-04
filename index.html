@@ -410,6 +410,61 @@ details.adv[open] summary::before{transform:rotate(90deg)}
 @keyframes tin{from{opacity:0;transform:translateY(-12px) scale(.95)}}
 @keyframes tout{to{opacity:0;transform:translateY(-8px) scale(.96)}}
 
+/* ---------- tournament ---------- */
+#tStrip{
+  position:fixed;z-index:30;left:50%;transform:translateX(-50%);
+  top:calc(var(--sat) + 60px);display:none;align-items:center;gap:8px;
+  background:rgba(21,24,28,.88);border:1px solid rgba(255,209,102,.4);
+  backdrop-filter:blur(12px);border-radius:999px;padding:7px 15px;
+  font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.14em;
+  color:var(--gold);box-shadow:0 0 16px rgba(255,209,102,.14);cursor:pointer;
+  white-space:nowrap;max-width:92vw;
+}
+#tStrip.on{display:flex}
+#tStrip .tsm{color:var(--dim);font-size:11px;letter-spacing:.1em}
+@media(min-width:768px){#tStrip{top:calc(var(--sat) + 64px)}}
+.fmtcard{
+  width:100%;text-align:left;display:flex;align-items:center;gap:12px;
+  background:var(--bg1);border:1px solid var(--line2);border-radius:13px;
+  padding:12px 14px;margin-bottom:8px;transition:.15s;
+}
+.fmtcard.on{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold),0 0 14px rgba(255,209,102,.12)}
+.fmtcard:disabled{opacity:.45;pointer-events:none}
+.fmtcard .fi{font-size:20px;flex:none}
+.fmtcard .ft{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.06em}
+.fmtcard .fd{font-size:11.5px;color:var(--dim);line-height:1.45}
+.fmtcard .fc{margin-left:auto;flex:none;font-family:var(--disp);font-weight:700;color:var(--gold);font-size:13px;letter-spacing:.06em}
+.tRow{
+  display:flex;align-items:center;gap:9px;padding:9px 2px;
+  border-bottom:1px solid var(--line);font-size:13.5px;min-height:42px;
+}
+.tRow:last-child{border-bottom:none}
+.tRow .tnm{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tRow .tnm.dim2{color:var(--dim);font-weight:600}
+.tRow .tsc{font-family:var(--disp);font-weight:700;letter-spacing:.12em;padding:0 2px}
+.tRow .twait{color:var(--faint);font-size:12px}
+.tRow .btn{margin-left:auto;flex:none}
+.tcard{
+  background:linear-gradient(180deg,rgba(255,209,102,.09),var(--bg1));
+  border:1px solid rgba(255,209,102,.35);border-radius:var(--r);
+  padding:13px 15px;margin-bottom:9px;
+}
+.tcard .tct{font-family:var(--disp);font-weight:700;letter-spacing:.2em;font-size:11px;color:var(--gold);margin-bottom:3px}
+.tcard .tcn{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:.04em}
+.tcard .tcs{color:var(--dim);font-size:12px;margin-top:2px}
+.standrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:13px}
+.standrow:last-child{border-bottom:none}
+.standrow .rank{font-family:var(--disp);font-weight:700;color:var(--faint);width:18px;flex:none}
+.standrow .rank.r1{color:var(--gold);text-shadow:0 0 10px rgba(255,209,102,.5)}
+.standrow .srec{margin-left:auto;font-family:var(--disp);font-weight:700;letter-spacing:.08em}
+.standrow .sdiff{color:var(--dim);font-size:11px;width:34px;text-align:right;font-family:var(--disp);font-weight:600}
+#pTrophies{
+  display:none;align-items:center;gap:7px;margin:-4px 0 14px;
+  color:var(--gold);font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.14em;
+  text-shadow:0 0 12px rgba(255,209,102,.4);
+}
+#pTrophies.on{display:flex}
+
 /* misc */
 .row{display:flex;align-items:center;gap:10px}
 .mt{margin-top:14px}.mb{margin-bottom:14px}
@@ -428,6 +483,9 @@ hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
 <header id="topbar">
   <div class="logo"><span class="x">X</span>BX<small>ARENA</small></div>
   <div class="spacer"></div>
+  <button class="iconbtn" id="btnTourn" aria-label="Tournament">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 5H4c0 3 1.5 4.7 3 5M17 5h3c0 3-1.5 4.7-3 5"/></svg>
+  </button>
   <button class="iconbtn" id="btnSettings" aria-label="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
   </button>
@@ -449,6 +507,9 @@ hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
 </nav>
 
 <button id="fabAdd" aria-label="Add player">+</button>
+
+<!-- TOURNAMENT STRIP -->
+<div id="tStrip" role="button" aria-label="Tournament progress"><span id="tsRound"></span><span class="tsm" id="tsProg"></span></div>
 
 <!-- HISTORY PANEL -->
 <section class="panel" id="panel-history">
@@ -498,6 +559,7 @@ hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
     <div class="vsx">VS<select id="bTarget"><option value="4">to 4</option><option value="5">to 5</option><option value="7">to 7</option><option value="10">to 10</option></select></div>
     <div class="bSide" id="bB"><div class="nm"></div><div class="sc">0</div><div class="splive"></div></div>
   </div>
+  <div id="bTourn" style="display:none;text-align:center;font-family:var(--disp);font-weight:700;font-size:11.5px;letter-spacing:.22em;color:var(--gold);margin:-6px 0 10px"></div>
   <div class="sideLabel" id="bALabel"></div>
   <div class="finrow" data-side="a"></div>
   <div class="sideLabel" id="bBLabel"></div>
@@ -512,7 +574,7 @@ hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
 <!-- WIN OVERLAY -->
 <div id="winOv">
   <div>
-    <div class="wsub">WINNER</div>
+    <div class="wsub" id="wSub">WINNER</div>
     <div class="wname" id="wName"></div>
     <div class="wscore" id="wScore"></div>
     <button class="btn primary" id="wDone">BACK TO ARENA</button>
@@ -532,6 +594,7 @@ hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
     <div class="stat"><b id="stX">0</b><span>XTREMES</span></div>
     <div class="stat"><b id="stSP">—</b><span>BEST SP</span></div>
   </div>
+  <div id="pTrophies"></div>
   <div class="colorrow" id="pColors"></div>
   <div class="sechead" style="margin-top:4px">RIVALRIES</div>
   <div class="rivals" id="pRivals"></div>
@@ -554,6 +617,24 @@ hr.soft{border:none;height:1px;background:var(--line);margin:16px 0}
 <div class="sheet" id="h2h" role="dialog" aria-label="Head to head">
   <div class="grab"></div>
   <div id="h2hBody"></div>
+</div>
+
+<!-- TOURNAMENT SETUP -->
+<div class="sheet" id="tSheet" role="dialog" aria-label="New tournament">
+  <div class="grab"></div>
+  <h3 class="ph" style="font-size:19px;margin-bottom:2px">NEW TOURNAMENT</h3>
+  <p class="psub" style="margin-bottom:10px">Pick the bladers, pick the format.</p>
+  <div class="sideLabel">BLADERS</div>
+  <div class="chiprow" id="tPlayers" style="flex-wrap:wrap"></div>
+  <div class="sideLabel">FORMAT</div>
+  <div id="tFormats"></div>
+  <button class="btn primary" style="width:100%;margin-top:12px" id="tBegin">⚡ BEGIN TOURNAMENT</button>
+</div>
+
+<!-- TOURNAMENT BRACKET -->
+<div class="sheet" id="tvSheet" role="dialog" aria-label="Tournament bracket">
+  <div class="grab"></div>
+  <div id="tvBody"></div>
 </div>
 
 <!-- SETTINGS -->
@@ -649,9 +730,11 @@ if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D
 const DB_KEY = 'bxarena.v1';
 const DEFAULTS = () => ({
   players: [],            // {id, name, color, created}
-  matches: [],            // {id, a, b, winner, sa, sb, target, points:[{p,t,v,ts}], ts, dur}
+  matches: [],            // {id, a, b, winner, sa, sb, target, points:[{p,t,v,ts}], ts, dur, tid?}
   launches: [],           // {id, p, dev, sp, ts}
   pos: {},                // playerId -> {x,y}
+  tournament: null,       // active tournament (see /*==TOURNAMENT==*/) or null
+  trophies: [],           // {id, champ, type, players:[ids], n, ts} — completed tournaments
   settings: { target: 4, spMap: null, uuids: [] },
 });
 const HEXC = /^#[0-9a-fA-F]{3,8}$/;
@@ -680,6 +763,7 @@ function sanitizeDb(data){
     out.matches.push({
       id, a, b, winner: w,
       sa: num(m.sa), sb: num(m.sb), target: num(m.target, 4),
+      tid: cleanId(m.tid),
       ts: num(m.ts, Date.now()), dur: num(m.dur),
       points: (Array.isArray(m.points) ? m.points : []).map(pt => ({
         p: cleanId(pt?.p), t: FIN[pt?.t] ? pt.t : 'spin', v: num(pt?.v, 1), ts: num(pt?.ts),
@@ -694,6 +778,42 @@ function sanitizeDb(data){
   if (data.pos && typeof data.pos === 'object')
     for (const [k, v] of Object.entries(data.pos))
       if (pids.has(k)) out.pos[k] = { x: num(v?.x), y: num(v?.y) };
+  for (const tr of (Array.isArray(data.trophies) ? data.trophies : [])){
+    const id = cleanId(tr?.id), champ = cleanId(tr?.champ);
+    if (!id || !pids.has(champ)) continue;
+    out.trophies.push({
+      id, champ,
+      type: ['rr','se','de'].includes(tr.type) ? tr.type : 'rr',
+      players: (Array.isArray(tr.players) ? tr.players : []).map(cleanId).filter(p => p && pids.has(p)),
+      n: num(tr.n), ts: num(tr.ts, Date.now()),
+    });
+  }
+  const tin = data.tournament;
+  if (tin && typeof tin === 'object' && ['rr','se','de'].includes(tin.type) && cleanId(tin.id)){
+    const tp = (Array.isArray(tin.players) ? tin.players : []).map(cleanId).filter(p => p && pids.has(p));
+    const rawFx = Array.isArray(tin.fixtures) ? tin.fixtures : [];
+    const fids = new Set(rawFx.map(f => cleanId(f?.id)).filter(Boolean));
+    const seat = v => {                        // pid | {from,take} | null (bye)
+      if (v == null) return null;
+      if (typeof v === 'string') return tp.includes(v) ? v : null;
+      const from = cleanId(v?.from);
+      return (from && fids.has(from) && ['winner','loser'].includes(v?.take)) ? { from, take: v.take } : null;
+    };
+    const fxs = [];
+    for (const f of rawFx){
+      const id = cleanId(f?.id);
+      if (!id) continue;
+      const w = cleanId(f?.winner), l = cleanId(f?.loser);
+      fxs.push({
+        id, round: String(f.round ?? '').slice(0, 24) || 'ROUND',
+        a: seat(f.a), b: seat(f.b),
+        winner: tp.includes(w) ? w : null, loser: tp.includes(l) ? l : null,
+        mid: cleanId(f?.mid), done: !!f.done,
+      });
+    }
+    if (tp.length >= 2 && fxs.length && tin.status !== 'done')
+      out.tournament = { id: tin.id, type: tin.type, players: tp, fixtures: fxs, status: 'active', created: num(tin.created, Date.now()) };
+  }
   const s = data.settings || {};
   const tgt = num(s.target, 4);
   out.settings.target = [4, 5, 7, 10].includes(tgt) ? tgt : 4;
@@ -741,6 +861,12 @@ function deletePlayer(id){
   db.matches = db.matches.filter(m => m.a !== id && m.b !== id);
   db.launches = db.launches.filter(l => l.p !== id);
   delete db.pos[id];
+  if (db.tournament && db.tournament.players.includes(id)){
+    db.tournament = null;
+    toast('Tournament voided', '💨');
+  }
+  db.trophies = db.trophies.filter(t => t.champ !== id);
+  for (const t of db.trophies) t.players = t.players.filter(p => p !== id);
   for (const ps of passes.values()) if (ps.player === id) ps.player = null;
   save();
 }
@@ -814,6 +940,7 @@ function syncGraph(){
     const st = statsOf(n.p.id);
     n.r = clamp(26 + st.w * 1.4, 26, 44);
   }
+  refreshTournUI();
   wake();
   updateHint();
 }
@@ -840,7 +967,8 @@ function physics(){
   for (let i = 0; i < ns.length; i++){
     const a = ns[i];
     if (a.pin) continue;
-    let fx = -a.x * 0.0016, fy = -a.y * 0.0016;           // center gravity
+    const grav = tElim.has(a.p.id) ? 0.0004 : 0.0016;     // eliminated bladers drift to the fringe
+    let fx = -a.x * grav, fy = -a.y * grav;               // center gravity
     for (let j = 0; j < ns.length; j++){
       if (i === j) continue;
       const b = ns[j];
@@ -972,6 +1100,27 @@ function render(){
       chipHits.push({ x: chx - tw/2 - 8, y: chy - 18, w: tw + 16, h: 36, a: e.a, b: e.b });
     }
   }
+  // active tournament: the scheduled pair crackles, with a tappable FIGHT chip
+  tournChipHit = null;
+  if (tUI){
+    const a = nodes.get(tUI.pa), b = nodes.get(tUI.pb);
+    if (a && b){
+      const [x1, y1] = toScreen(a.x, a.y), [x2, y2] = toScreen(b.x, b.y);
+      drawLightning(x1, y1, x2, y2, T * 0.5, a.p.color, b.p.color, 0.5);
+      const label = '⚡ ' + tUI.idx + ' OF ' + tUI.total + ' · FIGHT';
+      ctx.font = `700 ${11.5 * clamp(cam.z, .8, 1.15)}px Rajdhani, sans-serif`;
+      const tw = ctx.measureText(label).width + 20;
+      const mcx = (x1 + x2) / 2, mcy = (y1 + y2) / 2 - 22 * cam.z;
+      ctx.fillStyle = 'rgba(26,23,13,0.94)';
+      ctx.strokeStyle = 'rgba(255,209,102,0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.roundRect(mcx - tw / 2, mcy - 11, tw, 22, 11); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffd166';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, mcx, mcy + 1);
+      tournChipHit = { x: mcx - tw / 2 - 8, y: mcy - 19, w: tw + 16, h: 38, a: tUI.pa, b: tUI.pb };
+    }
+  }
   // drag-link lightning + target ring
   if (drag.mode === 'node' && drag.target){
     const a = nodes.get(drag.id), b = nodes.get(drag.target);
@@ -1030,6 +1179,7 @@ function render(){
   // nodes
   for (const n of nodes.values()){
     if (n.pop < 1) { n.pop = Math.min(1, n.pop + 0.08); wake(10); }
+    ctx.globalAlpha = tElim.has(n.p.id) ? 0.35 : 1;   // knocked out — still here, but faded
     const [sx, sy] = toScreen(n.x, n.y);
     const R = n.r * cam.z * (0.4 + 0.6 * easeOut(n.pop));
     const isDrag = (drag.mode === 'node' || drag.mode === 'link') && drag.id === n.p.id;
@@ -1073,6 +1223,7 @@ function render(){
       ctx.fillText('⚡ VS', sx, sy - R - 13 * cam.z);
     }
   }
+  ctx.globalAlpha = 1;
   // particles
   particles = particles.filter(p => p.life > 0);
   for (const p of particles){
@@ -1227,8 +1378,14 @@ function endPointer(ev){
     }
     persistPositions();
   } else if (drag.mode === 'pan' && !drag.moved){
-    const chip = chipAt(ev.clientX, ev.clientY);
-    if (chip) openH2H(chip.a, chip.b);
+    const tc = tournChipHit;
+    if (tc && ev.clientX >= tc.x && ev.clientX <= tc.x + tc.w && ev.clientY >= tc.y && ev.clientY <= tc.y + tc.h){
+      haptic([18, 40, 18]);
+      triggerBattle(tc.a, tc.b);
+    } else {
+      const chip = chipAt(ev.clientX, ev.clientY);
+      if (chip) openH2H(chip.a, chip.b);
+    }
   }
   drag.mode = null; drag.id = null; drag.target = null;
   wake();
@@ -1304,6 +1461,7 @@ function setTab(t){
   if (t === 'history') renderHistory();
   if (t === 'pass') renderPass();
   if (t === 'arena') wake();
+  refreshTournUI();
 }
 $$('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
 
@@ -1337,6 +1495,9 @@ function renderBattle(){
   eA.querySelector('.nm').style.color = A.color; eB.querySelector('.nm').style.color = B.color;
   eA.querySelector('.sc').textContent = battle.sa; eB.querySelector('.sc').textContent = battle.sb;
   eA.querySelector('.sc').style.color = A.color; eB.querySelector('.sc').style.color = B.color;
+  const tfx = pairFixture(battle.a, battle.b);
+  $('#bTourn').style.display = tfx ? '' : 'none';
+  if (tfx) $('#bTourn').textContent = '🏆 ' + tfx.fx.round;
   $('#bALabel').innerHTML = `<span class="pdot" style="background:${A.color}"></span>${esc(A.name)} scores`;
   $('#bBLabel').innerHTML = `<span class="pdot" style="background:${B.color}"></span>${esc(B.name)} scores`;
   $('#bLog').innerHTML = battle.points.map(pt => {
@@ -1393,6 +1554,7 @@ function finishBattle(){
     points: battle.points, ts: battle.ts, dur: Date.now() - battle.ts,
   };
   db.matches.push(m);
+  tournamentObserve(m);   // fulfils the current fixture if this was the scheduled pair
   save();
   battle = null;
   closeSheets();
@@ -1406,6 +1568,21 @@ function finishBattle(){
   haptic([30, 60, 30, 60, 80]);
 }
 $('#wDone').addEventListener('click', () => {
+  if (pendingChampion){
+    const P = getPlayer(pendingChampion);
+    pendingChampion = null;
+    if (P){
+      $('#wSub').textContent = '🏆 CHAMPION 🏆';
+      $('#wName').textContent = P.name;
+      $('#wName').style.color = P.color;
+      $('#wScore').textContent = 'wins the tournament';
+      const n = nodes.get(P.id);
+      if (n){ burst(n.x, n.y, P.color); burst(n.x, n.y, '#ffd166'); }
+      haptic([40, 80, 40, 80, 120]);
+      return;                      // keep the overlay up, now showing the champion
+    }
+  }
+  $('#wSub').textContent = 'WINNER';
   $('#winOv').classList.remove('on');
   setTab('arena');
 });
@@ -1663,6 +1840,340 @@ function renderHistory(){
     save(); renderHistory(); syncGraph();
   }));
 }
+
+/*==TOURNAMENT==*/
+// The tournament is a scheduler + observer over normal matches. It proposes
+// pairings (fixtures) and watches finishBattle; it never runs battles itself,
+// so tournament matches feed rivalry edges / h2h / history exactly like any other.
+// fixture: {id, round, a, b, winner, loser, mid, done}
+//   seat a/b: playerId | {from: fixtureId, take:'winner'|'loser'} | null (bye)
+const FMT = {
+  rr: { name: 'ROUND ROBIN', icon: '🔁', desc: 'Everyone battles everyone. Best record takes the crown.' },
+  se: { name: 'KNOCKOUT',    icon: '⚔️', desc: 'Single elimination. Lose once and you\'re out.' },
+  de: { name: 'DOUBLE ELIM', icon: '🔥', desc: 'Losers bracket gives a second chance. Single grand final.' },
+};
+const fmtCount = (t, n) => t === 'rr' ? n * (n - 1) / 2 : t === 'se' ? n - 1 : 2 * n - 2;
+const shuffle = arr => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const newFx = (round, a, b) => ({ id: uid(), round, a, b, winner: null, loser: null, mid: null, done: false });
+let pendingChampion = null;
+
+function genRR(pids){                 // circle method — nobody plays twice in a row
+  const ps = shuffle(pids);
+  if (ps.length % 2) ps.push(null);
+  const n = ps.length, half = n / 2, out = [];
+  let arr = ps.slice();
+  for (let r = 0; r < n - 1; r++){
+    for (let i = 0; i < half; i++){
+      const a = arr[i], b = arr[n - 1 - i];
+      if (a != null && b != null) out.push(newFx('ROUND ' + (r + 1), a, b));
+    }
+    arr = [arr[0], arr[n - 1], ...arr.slice(1, n - 1)];
+  }
+  return out;
+}
+const seLabel = sz => sz === 2 ? 'FINAL' : sz === 4 ? 'SEMI FINALS' : sz === 8 ? 'QUARTER FINALS' : 'ROUND OF ' + sz;
+function seRounds(pids){              // knockout as rounds of fixtures; byes fill to a power of 2
+  const ps = shuffle(pids);
+  let size = 2;
+  while (size < ps.length) size *= 2;
+  const byes = size - ps.length, m = size / 2, r1 = [];
+  let k = 0;
+  for (let i = 0; i < m; i++){
+    const a = ps[k++];
+    const b = i < m - byes ? ps[k++] : null;   // at most one bye per fixture
+    r1.push(newFx(seLabel(size), a, b));
+  }
+  const rounds = [r1];
+  while (rounds[rounds.length - 1].length > 1){
+    const prev = rounds[rounds.length - 1], next = [];
+    for (let i = 0; i < prev.length; i += 2)
+      next.push(newFx(seLabel(prev.length), { from: prev[i].id, take: 'winner' }, { from: prev[i + 1].id, take: 'winner' }));
+    rounds.push(next);
+  }
+  return rounds;
+}
+const genSE = pids => seRounds(pids).flat();
+function genDE(pids){                 // winners bracket + losers bracket + single grand final (no reset)
+  const wb = seRounds(pids);
+  for (const r of wb) for (const f of r) f.round = 'WB ' + f.round;
+  const k = wb.length, list = [...wb[0]];
+  let lbPrev = [], lbn = 1;
+  for (let i = 0; i < wb[0].length; i += 2)
+    lbPrev.push(newFx('LB ROUND 1', { from: wb[0][i].id, take: 'loser' }, { from: wb[0][i + 1].id, take: 'loser' }));
+  list.push(...lbPrev);
+  for (let r = 1; r < k; r++){
+    list.push(...wb[r]);
+    const isLast = r === k - 1;
+    lbn++;
+    const major = wb[r].map((f, i) => newFx(  // WB droppers meet LB survivors (reversed to delay rematches)
+      isLast ? 'LB FINAL' : 'LB ROUND ' + lbn,
+      { from: lbPrev[lbPrev.length - 1 - i].id, take: 'winner' },
+      { from: f.id, take: 'loser' }));
+    list.push(...major);
+    if (isLast){ lbPrev = major; break; }
+    lbn++;
+    const minor = [];
+    for (let i = 0; i < major.length; i += 2)
+      minor.push(newFx('LB ROUND ' + lbn, { from: major[i].id, take: 'winner' }, { from: major[i + 1].id, take: 'winner' }));
+    list.push(...minor);
+    lbPrev = minor;
+  }
+  list.push(newFx('GRAND FINAL', { from: wb[k - 1][0].id, take: 'winner' }, { from: lbPrev[0].id, take: 'winner' }));
+  return list;
+}
+
+const fxById = (t, id) => t.fixtures.find(f => f.id === id);
+function seatPid(t, s){               // pid | null (bye) | undefined (waiting on an earlier fixture)
+  if (s == null) return null;
+  if (typeof s === 'string') return s;
+  const fx = fxById(t, s.from);
+  if (!fx || !fx.done) return undefined;
+  return s.take === 'winner' ? fx.winner : fx.loser;
+}
+function seatText(t, s){
+  if (s == null) return 'bye';
+  if (typeof s === 'string') return getPlayer(s)?.name || '?';
+  const fx = fxById(t, s.from);
+  return (s.take === 'winner' ? 'winner' : 'loser') + ' of match ' + (t.fixtures.indexOf(fx) + 1);
+}
+function tickTournament(){            // cascade byes; detect completion; crown the champion
+  const t = db.tournament;
+  if (!t || t.status !== 'active') return;
+  let changed = true;
+  while (changed){
+    changed = false;
+    for (const fx of t.fixtures){
+      if (fx.done) continue;
+      const a = seatPid(t, fx.a), b = seatPid(t, fx.b);
+      if (a === undefined || b === undefined) continue;   // waiting
+      if (a != null && b != null) continue;               // real match — wait for the result
+      fx.winner = a ?? b ?? null;                         // bye (or cascading double-bye)
+      fx.loser = null;
+      fx.done = true;
+      changed = true;
+    }
+  }
+  if (t.fixtures.every(f => f.done)){
+    t.status = 'done';
+    const champ = t.type === 'rr'
+      ? rrStandings(t)[0]?.pid
+      : t.fixtures[t.fixtures.length - 1].winner;
+    if (champ){
+      db.trophies.push({ id: uid(), champ, type: t.type, players: [...t.players], n: t.fixtures.filter(f => f.mid).length, ts: Date.now() });
+      pendingChampion = champ;
+    }
+    db.tournament = null;
+  }
+  save();
+  refreshTournUI();
+}
+function readyFixtures(){             // undone fixtures whose both seats are real players
+  const t = db.tournament;
+  if (!t || t.status !== 'active') return [];
+  const out = [];
+  for (const fx of t.fixtures){
+    if (fx.done) continue;
+    const a = seatPid(t, fx.a), b = seatPid(t, fx.b);
+    if (a && b) out.push({ fx, a, b });
+  }
+  return out;
+}
+function pairFixture(x, y){
+  return readyFixtures().find(r => (r.a === x && r.b === y) || (r.a === y && r.b === x)) || null;
+}
+function tournamentObserve(m){        // any recorded match between a ready pair fulfils the fixture
+  const t = db.tournament;
+  if (!t || t.status !== 'active') return;
+  const hit = pairFixture(m.a, m.b);
+  if (!hit) return;
+  hit.fx.winner = m.winner;
+  hit.fx.loser = m.winner === m.a ? m.b : m.a;
+  hit.fx.mid = m.id;
+  hit.fx.done = true;
+  m.tid = t.id;
+  tickTournament();
+}
+function rrStandings(t){              // wins, then point diff from the underlying matches
+  const rows = t.players.map(pid => ({ pid, w: 0, l: 0, diff: 0 }));
+  const by = Object.fromEntries(rows.map(r => [r.pid, r]));
+  for (const fx of t.fixtures){
+    if (!fx.done || !fx.winner || !fx.loser) continue;
+    if (by[fx.winner]) by[fx.winner].w++;
+    if (by[fx.loser]) by[fx.loser].l++;
+    const m = fx.mid && db.matches.find(mm => mm.id === fx.mid);
+    if (m){
+      const d = Math.abs(m.sa - m.sb);
+      if (by[m.winner]) by[m.winner].diff += d;
+      const lo = m.winner === m.a ? m.b : m.a;
+      if (by[lo]) by[lo].diff -= d;
+    }
+  }
+  return rows.sort((x, y) => y.w - x.w || y.diff - x.diff);
+}
+function eliminatedIds(){
+  const t = db.tournament, out = new Set();
+  if (!t || t.status !== 'active' || t.type === 'rr') return out;
+  const losses = {};
+  for (const fx of t.fixtures) if (fx.done && fx.loser) losses[fx.loser] = (losses[fx.loser] || 0) + 1;
+  const lim = t.type === 'de' ? 2 : 1;
+  for (const [p, n] of Object.entries(losses)) if (n >= lim) out.add(p);
+  return out;
+}
+
+/*==TOURNAMENT-UI==*/
+let tUI = null;                       // {fx, pa, pb, idx, total} — current fixture, cached for the render loop
+let tElim = new Set();
+let tournChipHit = null;              // screen-space FIGHT chip
+function refreshTournUI(){
+  const t = db.tournament;
+  tElim = eliminatedIds();
+  const strip = $('#tStrip');
+  if (!t || t.status !== 'active'){
+    tUI = null;
+    strip.classList.remove('on');
+    wake(20);
+    return;
+  }
+  const cur = readyFixtures()[0] || null;
+  const done = t.fixtures.filter(f => f.mid).length;
+  const total = t.fixtures.filter(f => f.mid || !f.done).length;
+  tUI = cur ? { fx: cur.fx, pa: cur.a, pb: cur.b, idx: done + 1, total } : null;
+  strip.classList.toggle('on', curTab === 'arena');
+  $('#tsRound').textContent = FMT[t.type].icon + ' ' + (cur ? cur.fx.round : FMT[t.type].name);
+  $('#tsProg').textContent = '· ' + Math.min(done + 1, total) + ' OF ' + total;
+  wake(20);
+}
+let tSel = new Set(), tFmt = 'rr';
+function openTournamentSetup(){
+  if (db.players.length < 2){ toast('Add at least two bladers first', '👥'); return; }
+  tSel = new Set(db.players.map(p => p.id));
+  tFmt = 'rr';
+  renderTournamentSetup();
+  showSheet('#tSheet');
+}
+function renderTournamentSetup(){
+  $('#tPlayers').innerHTML = db.players.map(p => `
+    <button class="chip ${tSel.has(p.id) ? 'on' : ''}" data-tp="${p.id}">
+      <span class="pdot" style="background:${p.color}"></span>${esc(p.name)}
+    </button>`).join('');
+  $$('#tPlayers [data-tp]').forEach(c => c.addEventListener('click', () => {
+    tSel.has(c.dataset.tp) ? tSel.delete(c.dataset.tp) : tSel.add(c.dataset.tp);
+    renderTournamentSetup();
+  }));
+  const n = tSel.size;
+  $('#tFormats').innerHTML = Object.entries(FMT).map(([kk, f]) => {
+    const off = kk === 'de' && n < 3;
+    return `
+    <button class="fmtcard ${tFmt === kk ? 'on' : ''}" data-tf="${kk}" ${off ? 'disabled' : ''}>
+      <span class="fi">${f.icon}</span>
+      <span style="min-width:0"><span class="ft">${f.name}</span><br><span class="fd">${off ? 'Needs at least 3 bladers.' : f.desc}</span></span>
+      <span class="fc">${n >= 2 && !off ? fmtCount(kk, n) + ' ⚔' : ''}</span>
+    </button>`;
+  }).join('');
+  $$('#tFormats [data-tf]').forEach(c => c.addEventListener('click', () => {
+    tFmt = c.dataset.tf;
+    renderTournamentSetup();
+  }));
+  $('#tBegin').disabled = n < 2 || (tFmt === 'de' && n < 3);
+}
+$('#tBegin').addEventListener('click', () => {
+  const pids = db.players.filter(p => tSel.has(p.id)).map(p => p.id);
+  if (pids.length < 2 || (tFmt === 'de' && pids.length < 3)) return;
+  const fixtures = tFmt === 'rr' ? genRR(pids) : tFmt === 'se' ? genSE(pids) : genDE(pids);
+  db.tournament = { id: uid(), type: tFmt, players: pids, fixtures, status: 'active', created: Date.now() };
+  tickTournament();
+  closeSheets();
+  setTab('arena');
+  fitCamera();
+  toast('TOURNAMENT — LET IT RIP', '🏆');
+});
+function openBracket(){
+  const t = db.tournament;
+  if (!t){ openTournamentSetup(); return; }
+  const groups = [];
+  for (const fx of t.fixtures){
+    if (!groups.length || groups[groups.length - 1].label !== fx.round) groups.push({ label: fx.round, fxs: [] });
+    groups[groups.length - 1].fxs.push(fx);
+  }
+  const rowFor = fx => {
+    const pa = seatPid(t, fx.a), pb = seatPid(t, fx.b);
+    if (fx.done){
+      if (!fx.mid){                              // bye
+        const P = fx.winner && getPlayer(fx.winner);
+        return P ? `<div class="tRow"><span class="pdot" style="background:${P.color}"></span><span class="tnm" style="color:${P.color}">${esc(P.name)}</span><span class="twait">advances on a bye</span></div>` : '';
+      }
+      const m = db.matches.find(mm => mm.id === fx.mid);
+      const A = getPlayer(pa), B = getPlayer(pb);
+      if (!A || !B) return '';
+      const aWin = fx.winner === pa;
+      const sc = m ? (m.a === pa ? m.sa + '–' + m.sb : m.sb + '–' + m.sa) : '✓';
+      return `<div class="tRow">
+        <span class="pdot" style="background:${A.color}"></span>
+        <span class="tnm ${aWin ? '' : 'dim2'}" style="${aWin ? 'color:' + A.color : ''}">${esc(A.name)}</span>
+        <span class="tsc">${sc}</span>
+        <span class="tnm ${aWin ? 'dim2' : ''}" style="${aWin ? '' : 'color:' + B.color}">${esc(B.name)}</span>
+        <span class="pdot" style="background:${B.color}"></span>
+      </div>`;
+    }
+    if (pa && pb){
+      const A = getPlayer(pa), B = getPlayer(pb);
+      if (!A || !B) return '';
+      return `<div class="tRow">
+        <span class="pdot" style="background:${A.color}"></span>
+        <span class="tnm" style="color:${A.color}">${esc(A.name)}</span>
+        <span style="color:var(--faint);font-size:11px">vs</span>
+        <span class="tnm" style="color:${B.color}">${esc(B.name)}</span>
+        <span class="pdot" style="background:${B.color}"></span>
+        <button class="btn primary sm" data-fight="${fx.id}">⚡ FIGHT</button>
+      </div>`;
+    }
+    return `<div class="tRow"><span class="twait">${esc(seatText(t, fx.a))} vs ${esc(seatText(t, fx.b))}</span></div>`;
+  };
+  const standings = t.type !== 'rr' ? '' : `
+    <div class="sideLabel">STANDINGS</div>
+    ${rrStandings(t).map((r, i) => {
+      const P = getPlayer(r.pid);
+      return P ? `<div class="standrow">
+        <span class="rank ${i === 0 ? 'r1' : ''}">${i + 1}</span>
+        <span class="pdot" style="background:${P.color}"></span>
+        <span style="font-weight:600">${esc(P.name)}</span>
+        <span class="srec">${r.w}–${r.l}</span><span class="sdiff">${r.diff > 0 ? '+' : ''}${r.diff}</span>
+      </div>` : '';
+    }).join('')}`;
+  const done = t.fixtures.filter(f => f.mid).length;
+  const total = t.fixtures.filter(f => f.mid || !f.done).length;
+  $('#tvBody').innerHTML = `
+    <h3 class="ph" style="font-size:19px">${FMT[t.type].icon} ${FMT[t.type].name}</h3>
+    <p class="psub" style="margin-bottom:6px">${done} of ${total} matches fought</p>
+    ${standings}
+    ${groups.map(g => `<div class="day" style="margin:16px 0 4px">${esc(g.label)}</div>` + g.fxs.map(rowFor).join('')).join('')}
+    <button class="btn danger ghost sm" style="width:100%;margin-top:16px" id="tAbandon">Abandon tournament</button>`;
+  showSheet('#tvSheet');
+  $$('#tvBody [data-fight]').forEach(b => b.addEventListener('click', () => {
+    const r = readyFixtures().find(x => x.fx.id === b.dataset.fight);
+    if (!r) return;
+    closeSheets();
+    setTab('arena');
+    triggerBattle(r.a, r.b);
+  }));
+  $('#tAbandon').addEventListener('click', () => {
+    if (!confirm('Abandon this tournament? Played matches stay in history.')) return;
+    db.tournament = null;
+    save();
+    refreshTournUI();
+    closeSheets();
+    toast('Tournament abandoned', '💨');
+  });
+}
+$('#btnTourn').addEventListener('click', () => db.tournament ? openBracket() : openTournamentSetup());
+$('#tStrip').addEventListener('click', openBracket);
 
 /*==BLE==*/
 const NUS = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
