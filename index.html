@@ -1786,16 +1786,33 @@ function renderHistory(){
     renderHistory();
   }));
   const list = $('#histList');
-  let ms = [...db.matches].sort((a, b) => b.ts - a.ts);
-  if (histFilter) ms = ms.filter(m => m.a === histFilter || m.b === histFilter);
-  if (!ms.length){
+  let items = [
+    ...db.matches.map(m => ({ ts: m.ts, m })),
+    ...db.trophies.map(tr => ({ ts: tr.ts, tr })),
+  ].sort((a, b) => b.ts - a.ts);
+  if (histFilter) items = items.filter(it => it.m
+    ? (it.m.a === histFilter || it.m.b === histFilter)
+    : (it.tr.champ === histFilter || it.tr.players.includes(histFilter)));
+  if (!items.length){
     list.innerHTML = `<div class="empty"><span class="big">🌀</span>${histFilter ? 'No battles for this blader yet.' : 'No battles recorded yet.<br>Head to the arena and drag two bladers together.'}</div>`;
     return;
   }
   let html = '', lastDay = '';
-  for (const m of ms){
-    const day = fmtDay(m.ts);
+  for (const it of items){
+    const day = fmtDay(it.ts);
     if (day !== lastDay){ html += `<div class="day">${day}</div>`; lastDay = day; }
+    if (it.tr){
+      const P = getPlayer(it.tr.champ);
+      if (!P) continue;
+      html += `
+      <div class="tcard">
+        <div class="tct">🏆 ${FMT[it.tr.type]?.name || 'TOURNAMENT'} CHAMPION</div>
+        <div class="tcn" style="color:${P.color}">${esc(P.name)}</div>
+        <div class="tcs">${it.tr.players.length} bladers · ${it.tr.n} matches · ${fmtTime(it.tr.ts)}</div>
+      </div>`;
+      continue;
+    }
+    const m = it.m;
     const A = getPlayer(m.a), B = getPlayer(m.b);
     if (!A || !B) continue;
     const aWin = m.winner === m.a;
@@ -1822,6 +1839,7 @@ function renderHistory(){
         <div class="mfoot">
           <span>first to ${m.target}</span>
           <span>· ${Math.max(1, Math.round(m.dur / 60000))} min</span>
+          ${m.tid ? '<span style="color:var(--gold)">· 🏆 tournament</span>' : ''}
           ${sp[m.a] ? `<span>· ${esc(A.name.split(' ')[0])} ⚡${fmtSP(sp[m.a])}</span>` : ''}
           ${sp[m.b] ? `<span>· ${esc(B.name.split(' ')[0])} ⚡${fmtSP(sp[m.b])}</span>` : ''}
           <button class="del" data-del="${m.id}">delete</button>
