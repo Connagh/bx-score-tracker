@@ -733,7 +733,7 @@ const DEFAULTS = () => ({
   matches: [],            // {id, a, b, winner, sa, sb, target, points:[{p,t,v,ts}], ts, dur, tid?}
   launches: [],           // {id, p, dev, sp, ts}
   pos: {},                // playerId -> {x,y}
-  tournament: null,       // active tournament (see /*==TOURNAMENT==*/) or null
+  tournament: null,       // active tournament (see TOURNAMENT section) or null
   trophies: [],           // {id, champ, type, players:[ids], n, ts} — completed tournaments
   settings: { target: 4, spMap: null, uuids: [] },
 });
@@ -1602,6 +1602,9 @@ function openPlayerCard(id){
   $('#pName').value = P.name;
   $('#stW').textContent = st.w; $('#stL').textContent = st.l; $('#stX').textContent = st.x;
   $('#stSP').textContent = st.best ? fmtSP(st.best) : '—';
+  const tc = db.trophies.filter(tr => tr.champ === id).length;
+  $('#pTrophies').textContent = tc ? `🏆 CHAMPION ×${tc}` : '';
+  $('#pTrophies').classList.toggle('on', tc > 0);
   $('#pColors').innerHTML = PALETTE.map(c =>
     `<button class="cdot ${c === P.color ? 'on' : ''}" style="background:${c};color:${c}" data-c="${c}" aria-label="colour"></button>`).join('');
   $$('#pColors .cdot').forEach(d => d.addEventListener('click', () => {
