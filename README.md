@@ -1,6 +1,6 @@
 # BX Arena
 
-Beyblade X score tracker. Players are nodes in a graph. Drag one onto another to battle.
+Beyblade X score tracker. Players are nodes in a graph.
 
 Battle history, Battle Pass launch speeds over Bluetooth, everything stored locally in your browser.
 
